@@ -1,0 +1,48 @@
+---
+title: DataCore CLI
+description: 用一条命令连接 DataCore，让终端、自动化程序和 AI Agent 安全使用电导率预测迭代能力。
+template: splash
+hero:
+  tagline: 让终端、自动化程序和 AI Agent 使用同一套 DataCore 能力。
+  actions:
+    - text: 5 分钟开始
+      link: /getting-started/install/
+      icon: right-arrow
+    - text: 查看 GitHub
+      link: https://github.com/dptech-yb/datacore-cli
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<div class="install-panel">
+  <div>
+    <span class="install-label">macOS / Linux</span>
+    <code>curl -fsSL https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.sh | sh</code>
+  </div>
+  <p>Windows 也支持一条 PowerShell 命令安装。安装包会校验 SHA256，并同步 DataCore Skills。</p>
+</div>
+
+## 从一个问题，到一轮完整电导实验
+
+<div class="workflow" aria-label="DataCore CLI 电导工作流">
+  <div><span>01</span><strong>查看状态</strong><small>识别当前轮次与下一步</small></div>
+  <div><span>02</span><strong>生成推荐</strong><small>使用当前用户的算力凭据</small></div>
+  <div><span>03</span><strong>回传实测</strong><small>校验并关联 UniLab 结果</small></div>
+  <div><span>04</span><strong>训练迭代</strong><small>跟踪五折并安全重试</small></div>
+</div>
+
+<CardGrid>
+  <Card title="同一权限边界" icon="lock">
+    CLI 始终以当前登录的平台用户执行，不绕过项目、实验或操作权限。
+  </Card>
+  <Card title="Agent 原生" icon="robot">
+    安装即包含 Skills、结构化 JSON、稳定错误码和可恢复动作。
+  </Card>
+  <Card title="可追踪、可撤销" icon="approve-check-circle">
+    写操作需要确认，授权可在个人中心查看和撤销。
+  </Card>
+</CardGrid>
+
+<p class="agent-note"><strong>给 Agent：</strong>从 <a href="/llms.txt">llms.txt</a> 开始，或直接读取内置 Skills。</p>

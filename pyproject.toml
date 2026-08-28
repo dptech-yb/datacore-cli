@@ -36,7 +36,7 @@ dev = [
 datacore = "datacore_cli.main:main"
 
 [project.urls]
-Homepage = "https://datacore.dp.qifalab.cn/cli"
+Documentation = "https://datacore-cli.dp.cd.mba"
 Repository = "https://github.com/dptech-yb/datacore-cli"
 Issues = "https://github.com/dptech-yb/datacore-cli/issues"
 

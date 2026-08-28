@@ -1,0 +1,1452 @@
+{
+  "schemaVersion": "1",
+  "cli": "datacore",
+  "version": "0.1.0",
+  "generatedFrom": "src/datacore_cli/main.py",
+  "commands": [
+    {
+      "command": "datacore setup",
+      "summary": "安装 Skills 并登录 DataCore",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "no_browser",
+          "flags": [
+            "--no-browser"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "allow_file_credential",
+          "flags": [
+            "--allow-file-credential"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        }
+      ],
+      "requiresConfirmation": false,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore doctor",
+      "summary": "检查 CLI、Skills、网络和授权状态",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        }
+      ],
+      "requiresConfirmation": false,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore update",
+      "summary": "升级 CLI 并同步 Skills",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "target_version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": ""
+        }
+      ],
+      "requiresConfirmation": false,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore uninstall",
+      "summary": "撤销授权并卸载 CLI 与 Skills",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "yes",
+          "flags": [
+            "--yes"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        }
+      ],
+      "requiresConfirmation": true,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore auth login",
+      "summary": "在浏览器中授权当前设备",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "no_browser",
+          "flags": [
+            "--no-browser"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "allow_file_credential",
+          "flags": [
+            "--allow-file-credential"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        }
+      ],
+      "requiresConfirmation": false,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore auth logout",
+      "summary": "撤销当前设备授权",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        }
+      ],
+      "requiresConfirmation": false,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore auth status",
+      "summary": "查看当前登录身份与授权状态",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        }
+      ],
+      "requiresConfirmation": false,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore skills install",
+      "summary": "将内置 Skills 同步到本机",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "force",
+          "flags": [
+            "--force"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        }
+      ],
+      "requiresConfirmation": false,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore skills list",
+      "summary": "列出 CLI 自带的 Skills",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        }
+      ],
+      "requiresConfirmation": false,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore conductivity status",
+      "summary": "查看轮次状态与下一步动作",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "target",
+          "flags": [],
+          "required": true,
+          "help": "",
+          "choices": [],
+          "default": null
+        }
+      ],
+      "requiresConfirmation": false,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore conductivity recommend",
+      "summary": "提交本轮推荐配方计算",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "target",
+          "flags": [],
+          "required": true,
+          "help": "",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "yes",
+          "flags": [
+            "--yes"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "wait",
+          "flags": [
+            "--wait"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": null
+        }
+      ],
+      "requiresConfirmation": true,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore conductivity export",
+      "summary": "导出 UniLab、称量单或示例文件",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "target",
+          "flags": [],
+          "required": true,
+          "help": "",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "format",
+          "flags": [
+            "--format"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [
+            "unilab",
+            "xlsx",
+            "csv",
+            "demo"
+          ],
+          "default": "unilab"
+        },
+        {
+          "name": "output",
+          "flags": [
+            "--output"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "total_mass_g",
+          "flags": [
+            "--total-mass-g"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": 50.0
+        }
+      ],
+      "requiresConfirmation": false,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore conductivity train",
+      "summary": "提交五折训练并跟踪状态",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "target",
+          "flags": [],
+          "required": true,
+          "help": "",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "yes",
+          "flags": [
+            "--yes"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "wait",
+          "flags": [
+            "--wait"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": null
+        }
+      ],
+      "requiresConfirmation": true,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore conductivity compare",
+      "summary": "比较当前模型与推荐基线",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "target",
+          "flags": [],
+          "required": true,
+          "help": "",
+          "choices": [],
+          "default": null
+        }
+      ],
+      "requiresConfirmation": false,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore conductivity next",
+      "summary": "确认并开启下一轮",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "target",
+          "flags": [],
+          "required": true,
+          "help": "",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "yes",
+          "flags": [
+            "--yes"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        }
+      ],
+      "requiresConfirmation": true,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore conductivity validate",
+      "summary": "只读校验实测 CSV",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "target",
+          "flags": [],
+          "required": true,
+          "help": "",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "file",
+          "flags": [],
+          "required": true,
+          "help": "",
+          "choices": [],
+          "default": null
+        }
+      ],
+      "requiresConfirmation": false,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore conductivity upload",
+      "summary": "校验并上传实测 CSV",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "target",
+          "flags": [],
+          "required": true,
+          "help": "",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "file",
+          "flags": [],
+          "required": true,
+          "help": "",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "yes",
+          "flags": [
+            "--yes"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "no_merge",
+          "flags": [
+            "--no-merge"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        }
+      ],
+      "requiresConfirmation": true,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore conductivity retry-fold",
+      "summary": "只重试一个未完成训练折",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "target",
+          "flags": [],
+          "required": true,
+          "help": "",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "fold",
+          "flags": [
+            "--fold"
+          ],
+          "required": true,
+          "help": "",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "yes",
+          "flags": [
+            "--yes"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        }
+      ],
+      "requiresConfirmation": true,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore conductivity decide",
+      "summary": "记录继续或停止的轮次结论",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "target",
+          "flags": [],
+          "required": true,
+          "help": "",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "decision",
+          "flags": [],
+          "required": true,
+          "help": "",
+          "choices": [
+            "continue",
+            "stop"
+          ],
+          "default": null
+        },
+        {
+          "name": "reason",
+          "flags": [
+            "--reason"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "yes",
+          "flags": [
+            "--yes"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        }
+      ],
+      "requiresConfirmation": true,
+      "supportsJson": true
+    }
+  ]
+}

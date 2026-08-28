@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://datacore-cli.dp.cd.mba/sitemap-index.xml

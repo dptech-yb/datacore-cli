@@ -1,0 +1,25 @@
+{
+  "name": "datacore-cli-docs",
+  "private": true,
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "docs:generate": "python3 ../scripts/generate_docs.py",
+    "predev": "npm run docs:generate",
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "npm run docs:generate && astro build && node scripts/validate-build.mjs",
+    "assets:generate": "node scripts/generate-favicon.mjs",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "3.7.3",
+    "@astrojs/starlight": "0.41.9",
+    "astro": "7.2.9",
+    "sharp": "0.35.4"
+  },
+  "allowScripts": {
+    "esbuild": true
+  }
+}

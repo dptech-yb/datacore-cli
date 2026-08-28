@@ -4,6 +4,8 @@ DataCore CLI 将 DataCore 平台能力提供给终端、自动化程序和 AI Ag
 
 CLI 始终以当前登录的 DataCore 用户执行，沿用平台项目、实验和操作权限。写操作与云端计算必须显式确认。
 
+完整文档与 Agent 可读入口：[datacore-cli.dp.cd.mba](https://datacore-cli.dp.cd.mba)
+
 ## 一键安装
 
 需要 Python 3.10 或更高版本。安装仅写入当前用户目录，不需要管理员或 `sudo` 权限。

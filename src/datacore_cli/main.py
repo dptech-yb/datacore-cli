@@ -182,22 +182,30 @@ def _parser() -> argparse.ArgumentParser:
 
     auth = sub.add_parser("auth", help="平台登录授权")
     auth_sub = auth.add_subparsers(dest="auth_command", required=True)
-    login = auth_sub.add_parser("login")
+    login = auth_sub.add_parser("login", help="在浏览器中授权当前设备")
     login.add_argument("--no-browser", action="store_true")
     login.add_argument("--allow-file-credential", action="store_true")
-    auth_sub.add_parser("logout")
-    auth_sub.add_parser("status")
+    auth_sub.add_parser("logout", help="撤销当前设备授权")
+    auth_sub.add_parser("status", help="查看当前登录身份与授权状态")
 
     skills = sub.add_parser("skills", help="安装或查看 DataCore Skills")
     skills_sub = skills.add_subparsers(dest="skills_command", required=True)
-    install = skills_sub.add_parser("install")
+    install = skills_sub.add_parser("install", help="将内置 Skills 同步到本机")
     install.add_argument("--force", action="store_true")
-    skills_sub.add_parser("list")
+    skills_sub.add_parser("list", help="列出 CLI 自带的 Skills")
 
     conductivity = sub.add_parser("conductivity", help="电导完整工作流")
     csub = conductivity.add_subparsers(dest="conductivity_command", required=True)
+    conductivity_help = {
+        "status": "查看轮次状态与下一步动作",
+        "recommend": "提交本轮推荐配方计算",
+        "export": "导出 UniLab、称量单或示例文件",
+        "train": "提交五折训练并跟踪状态",
+        "compare": "比较当前模型与推荐基线",
+        "next": "确认并开启下一轮",
+    }
     for name in ("status", "recommend", "export", "train", "compare", "next"):
-        item = csub.add_parser(name)
+        item = csub.add_parser(name, help=conductivity_help[name])
         item.add_argument("target")
         if name in {"recommend", "train", "next"}:
             item.add_argument("--yes", action="store_true")
@@ -209,19 +217,19 @@ def _parser() -> argparse.ArgumentParser:
     export.add_argument("--output")
     export.add_argument("--total-mass-g", type=float, default=50.0)
 
-    validate = csub.add_parser("validate")
+    validate = csub.add_parser("validate", help="只读校验实测 CSV")
     validate.add_argument("target")
     validate.add_argument("file")
-    upload = csub.add_parser("upload")
+    upload = csub.add_parser("upload", help="校验并上传实测 CSV")
     upload.add_argument("target")
     upload.add_argument("file")
     upload.add_argument("--yes", action="store_true")
     upload.add_argument("--no-merge", action="store_true")
-    retry = csub.add_parser("retry-fold")
+    retry = csub.add_parser("retry-fold", help="只重试一个未完成训练折")
     retry.add_argument("target")
     retry.add_argument("--fold", type=int, required=True)
     retry.add_argument("--yes", action="store_true")
-    decide = csub.add_parser("decide")
+    decide = csub.add_parser("decide", help="记录继续或停止的轮次结论")
     decide.add_argument("target")
     decide.add_argument("decision", choices=["continue", "stop"])
     decide.add_argument("--reason", default="")

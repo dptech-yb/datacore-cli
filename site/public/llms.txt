@@ -1,0 +1,19 @@
+# DataCore CLI
+
+> DataCore 平台 CLI 与可安装 Agent Skills。首版覆盖电导率预测迭代。
+
+## Start here
+
+- [安装与快速开始](/getting-started/install.md)
+- [身份、授权与权限](/getting-started/authentication.md)
+- [第三方 Agent 接入](/agents/index.md)
+- [电导率预测迭代](/workflows/conductivity.md)
+- [CLI 命令参考](/reference/commands.md)
+- [结构化输出约定](/reference/output-contract.md)
+- [故障恢复](/troubleshooting.md)
+
+## Machine-readable
+
+- [commands.json](/commands.json)
+- [DataCore Skill](/skills/datacore/SKILL.md)
+- [Conductivity Skill](/skills/datacore-conductivity/SKILL.md)
