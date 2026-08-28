@@ -1,48 +1,128 @@
 ---
 title: DataCore CLI
-description: 用一条命令连接 DataCore，让终端、自动化程序和 AI Agent 安全使用电导率预测迭代能力。
+description: DataCore 的确定性执行层，让终端、自动化程序和 AI Agent 安全调用实验工作流。
 template: splash
-hero:
-  tagline: 让终端、自动化程序和 AI Agent 使用同一套 DataCore 能力。
-  actions:
-    - text: 5 分钟开始
-      link: /getting-started/install/
-      icon: right-arrow
-    - text: 查看 GitHub
-      link: https://github.com/dptech-yb/datacore-cli
-      icon: external
-      variant: minimal
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+<main class="dc-home">
+  <section class="dc-hero">
+    <div class="dc-hero-copy">
+      <p class="dc-kicker"><span></span> DataCore Developer Platform</p>
+      <h1>把实验工作流，<br /><em>交给终端与 AI Agent。</em></h1>
+      <p class="dc-lead">
+        用一套可审计、可撤销的命令接口，连接 DataCore 的数据、模型与实验流程。首版覆盖完整的电导率预测迭代。
+      </p>
+      <div class="dc-actions">
+        <a class="dc-button dc-button-primary" href="/getting-started/install/">5 分钟开始 <span>→</span></a>
+        <a class="dc-button dc-button-secondary" href="https://github.com/dptech-yb/datacore-cli">查看 GitHub ↗</a>
+      </div>
+      <div class="dc-trust-row" aria-label="核心保障">
+        <span>当前用户权限</span>
+        <span>写入前确认</span>
+        <span>长任务可恢复</span>
+      </div>
+    </div>
 
-<div class="install-panel">
-  <div>
-    <span class="install-label">macOS / Linux</span>
-    <code>curl -fsSL https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.sh | sh</code>
-  </div>
-  <p>Windows 也支持一条 PowerShell 命令安装。安装包会校验 SHA256，并同步 DataCore Skills。</p>
-</div>
+    <div class="dc-console" aria-label="DataCore CLI 状态示例">
+      <div class="dc-console-bar">
+        <div class="dc-console-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+        <span>datacore / conductivity</span>
+        <b>LIVE</b>
+      </div>
+      <div class="dc-console-body">
+        <p class="dc-console-label">CURRENT CONTEXT</p>
+        <div class="dc-console-command"><span>$</span><code>datacore --json conductivity status TARGET</code></div>
+        <div class="dc-console-result">
+          <div class="dc-result-head"><span class="dc-status-dot"></span><strong>当前轮次已识别</strong><small>READY</small></div>
+          <dl>
+            <div><dt>实验</dt><dd>电导率预测迭代</dd></div>
+            <div><dt>阶段</dt><dd>实测数据回传</dd></div>
+            <div><dt>下一步</dt><dd>校验并关联 UniLab 结果</dd></div>
+          </dl>
+        </div>
+        <div class="dc-console-flow" aria-label="工作流阶段">
+          <span class="done">状态</span><i>→</i><span class="done">推荐</span><i>→</i><span class="active">实测</span><i>→</i><span>训练</span>
+        </div>
+      </div>
+    </div>
+  </section>
 
-## 从一个问题，到一轮完整电导实验
+  <section class="dc-install-strip" aria-label="安装命令">
+    <div><span class="dc-os">macOS / Linux</span><code>curl -fsSL https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.sh | sh</code></div>
+    <a href="/getting-started/install/#windows-powershell">Windows 安装</a>
+  </section>
 
-<div class="workflow" aria-label="DataCore CLI 电导工作流">
-  <div><span>01</span><strong>查看状态</strong><small>识别当前轮次与下一步</small></div>
-  <div><span>02</span><strong>生成推荐</strong><small>使用当前用户的算力凭据</small></div>
-  <div><span>03</span><strong>回传实测</strong><small>校验并关联 UniLab 结果</small></div>
-  <div><span>04</span><strong>训练迭代</strong><small>跟踪五折并安全重试</small></div>
-</div>
+  <section class="dc-section dc-system-section">
+    <div class="dc-section-heading">
+      <p class="dc-eyebrow">ONE EXECUTION LAYER</p>
+      <h2>Agent 可以更换，业务规则只有一套。</h2>
+      <p>网页、飞书、终端和第三方 Agent 最终都进入 DataCore 的同一权限与命令引擎，不复制校验逻辑，也不制造第二套数据口径。</p>
+    </div>
+    <div class="dc-system-map" aria-label="DataCore CLI 架构关系">
+      <article>
+        <span class="dc-node-index">01</span>
+        <div><strong>人或 AI Agent</strong><small>自然语言、脚本、自动化任务</small></div>
+      </article>
+      <b aria-hidden="true">→</b>
+      <article class="featured">
+        <span class="dc-node-index">02</span>
+        <div><strong>CLI + Skills</strong><small>稳定命令、结构化输出、恢复约定</small></div>
+      </article>
+      <b aria-hidden="true">→</b>
+      <article>
+        <span class="dc-node-index">03</span>
+        <div><strong>DataCore 平台</strong><small>权限、数据、模型与审计</small></div>
+      </article>
+    </div>
+  </section>
 
-<CardGrid>
-  <Card title="同一权限边界" icon="lock">
-    CLI 始终以当前登录的平台用户执行，不绕过项目、实验或操作权限。
-  </Card>
-  <Card title="Agent 原生" icon="robot">
-    安装即包含 Skills、结构化 JSON、稳定错误码和可恢复动作。
-  </Card>
-  <Card title="可追踪、可撤销" icon="approve-check-circle">
-    写操作需要确认，授权可在个人中心查看和撤销。
-  </Card>
-</CardGrid>
+  <section class="dc-section dc-proof-section">
+    <div class="dc-section-heading compact">
+      <p class="dc-eyebrow">BUILT FOR REAL WORK</p>
+      <h2>不是 API 的薄包装，而是可执行的业务契约。</h2>
+    </div>
+    <div class="dc-proof-grid">
+      <article>
+        <span>01 / IDENTITY</span>
+        <h3>沿用当前平台身份</h3>
+        <p>密码、飞书或 Bohrium 登录最终都绑定到同一个 DataCore 用户。项目、实验与操作权限继续由平台判断。</p>
+      </article>
+      <article>
+        <span>02 / CONTROL</span>
+        <h3>写操作必须确认</h3>
+        <p>查询可直接执行；上传、训练和开启下一轮先冻结目标与参数，再由用户明确确认，避免 Agent 擅自改变任务。</p>
+      </article>
+      <article>
+        <span>03 / RECOVERY</span>
+        <h3>云端任务不会因终端关闭而丢失</h3>
+        <p>推荐与五折训练持久化运行状态。本地中断后重新查询即可继续，失败折也能单独恢复。</p>
+      </article>
+    </div>
+  </section>
 
-<p class="agent-note"><strong>给 Agent：</strong>从 <a href="/llms.txt">llms.txt</a> 开始，或直接读取内置 Skills。</p>
+  <section class="dc-section dc-workflow-section">
+    <div class="dc-section-heading compact">
+      <p class="dc-eyebrow">CONDUCTIVITY · V0.1</p>
+      <h2>从当前状态，到下一轮实验。</h2>
+    </div>
+    <div class="dc-workflow">
+      <article><span>01</span><h3>识别状态</h3><p>解析实验、链路与轮次，返回唯一的下一步。</p><code>conductivity status</code></article>
+      <article><span>02</span><h3>推荐与导出</h3><p>使用用户自己的算力凭据，生成并导出 UniLab 任务。</p><code>recommend · export</code></article>
+      <article><span>03</span><h3>实测回传</h3><p>先校验，再按推荐编号关联实测结果与训练数据。</p><code>validate · upload</code></article>
+      <article><span>04</span><h3>训练迭代</h3><p>逐折跟踪模型训练，比较效果并安全开启下一轮。</p><code>train · compare · next</code></article>
+    </div>
+  </section>
+
+  <section class="dc-agent-entry">
+    <div>
+      <p class="dc-eyebrow">FOR AI AGENTS</p>
+      <h2>机器可读，不需要从网页猜。</h2>
+      <p>公开 Skills、命令清单与完整上下文，让支持终端能力的 Agent 可以先理解约定，再安全执行。</p>
+    </div>
+    <div class="dc-agent-links">
+      <a href="/llms.txt"><span>LLM INDEX</span><strong>llms.txt</strong><i>→</i></a>
+      <a href="/commands.json"><span>COMMAND SCHEMA</span><strong>commands.json</strong><i>→</i></a>
+      <a href="/agents/"><span>INTEGRATION GUIDE</span><strong>第三方 Agent 接入</strong><i>→</i></a>
+    </div>
+  </section>
+</main>
