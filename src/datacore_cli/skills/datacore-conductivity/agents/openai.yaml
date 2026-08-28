@@ -1,0 +1,4 @@
+interface:
+  display_name: "DataCore Conductivity"
+  short_description: "Run the DataCore conductivity optimization workflow"
+  default_prompt: "Use DataCore conductivity commands to inspect or advance the requested conductivity round safely."
