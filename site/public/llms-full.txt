@@ -17,7 +17,7 @@ Source: /agents/index.md
 
 DataCore Agent 不是唯一入口。任何能够执行本地命令、读取文本并获得用户确认的 Agent，都可以通过 DataCore CLI 使用同一套平台能力。
 
-## 接入方式
+## 最短接入路径
 
 1. 用户安装 CLI 并完成 `datacore setup`；
 2. Agent 读取 DataCore Skill 与电导 Skill；
@@ -29,14 +29,31 @@ DataCore Agent 不是唯一入口。任何能够执行本地命令、读取文�
 datacore --json conductivity status '完整的 DataCore 电导页面 URL'
 ```
 
+Agent 只需要处理三个稳定界面：
+
+| 界面 | 用途 | 首选入口 |
+| --- | --- | --- |
+| Skills | 理解工作流、确认与恢复规则 | `datacore skills list` |
+| CLI | 执行确定性操作 | `datacore …` |
+| JSON | 读取结果、错误和产物 | 全局 `--json` |
+
 ## Skills 在哪里
 
-安装包会把 Skills 同步到 Codex 的 `~/.codex/skills/` 目录。其他 Agent 可以直接读取公开版本：
+安装包会把 Skills 同步到本机支持的 Agent 目录。其他 Agent 也可以直接读取公开版本：
 
 - [DataCore 基础 Skill](/skills/datacore/SKILL.md)
 - [电导工作流 Skill](/skills/datacore-conductivity/SKILL.md)
 
 如果 Agent 不支持 Skill 发现机制，也可以读取 [llms.txt](/llms.txt)、[完整上下文](/llms-full.txt) 和 [commands.json](/commands.json)。
+
+## 最小执行循环
+
+```text
+读取 Skill → 查询状态 → 向用户说明目标与影响
+           → 获得确认 → 执行写操作 → 查询服务端状态
+```
+
+本地等待结束不代表云端任务失败。Agent 必须先重新查询状态，再决定是否重试。
 
 ## 为什么统一走 CLI
 
@@ -59,24 +76,26 @@ Source: /getting-started/authentication.md
 
 # 身份、授权与权限
 
-## 登录的是 DataCore 平台账号
+CLI 没有独立账号体系。它只代表当前用户调用 DataCore，因此网页、终端与 Agent 看到的是同一套数据范围和操作权限。
+
+## 1. 登录 DataCore 平台账号
 
 ```bash
 datacore auth login
 ```
 
-命令会打开 DataCore 授权页。用户可以使用平台密码、飞书或 Bohrium 登录；无论入口是什么，最终都解析为同一个 DataCore 用户身份。
+命令会打开 [DataCore 授权页](https://datacore.dp.qifalab.cn/)。用户可以使用平台密码、飞书或 Bohrium 登录；无论入口是什么，最终都解析为同一个 DataCore 用户身份。
 
 CLI 不创建第二套账号，也不拥有独立的数据权限。项目、实验、数据和操作权限全部由 DataCore 后端统一判断。
 
-## 凭据如何保存
+## 2. 凭据如何保存
 
 - 交互式登录默认把可撤销的短期授权保存到操作系统 Keychain；
 - 无桌面环境使用 `DATACORE_TOKEN`，不要写进仓库或命令历史；
 - 本地文件保存默认关闭，只有用户明确传入 `--allow-file-credential` 才启用；
 - Bohrium AccessKey 不出现在命令参数、日志、Prompt 或导出文件中。
 
-## 查看与撤销
+## 3. 查看与撤销
 
 ```bash
 datacore auth status
@@ -85,7 +104,16 @@ datacore auth logout
 
 用户也可以在 DataCore 个人中心查看和撤销已经授权的 CLI 客户端。撤销后，本机持有的旧授权不能继续访问平台。
 
-## 写操作确认
+## 4. 权限如何生效
+
+| 场景 | 判断位置 | CLI 行为 |
+| --- | --- | --- |
+| 查看项目或实验 | DataCore 后端 | 仅返回当前用户有权看到的数据 |
+| 上传、训练、开启下一轮 | DataCore 后端 + 用户确认 | 目标冻结后仍需 `--yes` |
+| Bohrium 计算 | 当前用户的平台配置 | 不借用平台默认项目或他人凭据 |
+| 撤销设备 | DataCore 个人中心或 CLI | 旧授权立即失效 |
+
+## 5. 写操作确认
 
 查询和校验可以直接执行；上传、推荐、训练、重试、决策和开启下一轮等操作必须先确认目标，再传入 `--yes`。这一约束同时适用于人和 Agent。
 
@@ -98,33 +126,54 @@ Source: /getting-started/install.md
 
 DataCore CLI 需要 Python 3.10 或更高版本。安装程序只写入当前用户目录，不需要管理员权限。
 
-## macOS / Linux
+> 完成本页后，你应当可以运行 `datacore doctor`、看到已安装的 Skills，并以自己的 DataCore 账号完成授权。
+
+## 1. 安装 CLI 与 Skills
+
+### macOS / Linux
 
 ```bash
 curl -fsSL https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.sh | sh
 ```
 
-## Windows PowerShell
+### Windows PowerShell
 
 ```powershell
 irm https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.ps1 | iex
 ```
 
-安装脚本会完成三件事：
+一键安装会完成：
 
 1. 从官方 GitHub Release 下载 wheel；
 2. 用同一 Release 的 `SHA256SUMS` 校验文件；
-3. 安装 CLI、同步 Skills，并打开 DataCore 授权页。
+3. 安装 CLI，并准备同步 DataCore Skills。
 
-安装完成后检查：
+## 2. 初始化并检查
 
 ```bash
 datacore setup
 datacore doctor
 datacore auth status
+datacore skills list
 ```
 
-`datacore setup` 会同步 DataCore Skills，并在浏览器中打开平台授权页。密码、飞书和 Bohrium 登录最终都绑定到当前 DataCore 平台账号。
+`datacore setup` 会同步 Skills，并在浏览器中打开 [DataCore 平台](https://datacore.dp.qifalab.cn/)授权页。密码、飞书和 Bohrium 登录最终都绑定到当前平台账号。
+
+看到以下结果即可开始使用：
+
+- `doctor` 未报告阻断性问题；
+- `auth status` 显示当前用户；
+- `skills list` 至少包含 DataCore 基础 Skill 与电导 Skill。
+
+## 3. 执行第一条工作流命令
+
+从 DataCore 电导页面复制完整 URL，然后执行：
+
+```bash
+datacore --json conductivity status '完整的 DataCore 电导页面 URL'
+```
+
+命令只查询状态，不会修改实验。返回结果中的 `nextAction` 是当前轮次应执行的下一步。
 
 ## 固定版本
 
@@ -137,7 +186,7 @@ curl -fsSL https://github.com/dptech-yb/datacore-cli/releases/latest/download/in
 
 也可以从 [GitHub Releases](https://github.com/dptech-yb/datacore-cli/releases) 下载 wheel、校验和、SBOM 和 Sigstore bundle。
 
-## 更新与卸载
+## 更新、重装与卸载
 
 ```bash
 datacore update
@@ -145,6 +194,8 @@ datacore uninstall --yes
 ```
 
 更新会同步 CLI 与 Skills。卸载会撤销当前设备授权，并清理 CLI 与 DataCore Skills。
+
+遇到安装或授权问题，请先查看[故障恢复](/troubleshooting/)；完整参数见[CLI 命令参考](/reference/commands/)。
 
 
 ---
@@ -516,6 +567,14 @@ Source: /reference/output-contract.md
 
 自动化程序和 Agent 应始终加全局选项 `--json`。
 
+| 字段 | 含义 | 调用方应如何处理 |
+| --- | --- | --- |
+| `ok` | 命令是否成功 | 为 `false` 时读取 `error` |
+| `summary` | 可直接展示的简短结论 | 优先显示给用户 |
+| `data` | 命令相关结构化结果 | 用字段判断下一步，不解析自然语言 |
+| `artifacts` | 文件产物 | 展示路径、类型和大小 |
+| `warnings` | 非阻断提示 | 保留并提示用户 |
+
 ## 成功
 
 ```json
@@ -551,6 +610,12 @@ Source: /reference/output-contract.md
 
 Agent 应优先遵循 `action`，并根据 `retryable` 判断是否能做有限重试。权限、校验和生命周期错误不是可绕过的客户端限制。
 
+### 重试判断
+
+- `retryable: true`：先查询服务端状态，再做有限次数退避重试；
+- `retryable: false`：停止自动重试，把 `message` 与 `action` 原样说明给用户；
+- 写操作超时：不能直接重复提交，必须先用状态命令确认是否已经创建任务。
+
 ## 请求追踪
 
 ```bash
@@ -569,6 +634,14 @@ Source: /security.md
 ## 权限边界
 
 CLI 是 DataCore 的确定性执行层，不是权限代理。每个请求都以当前登录用户身份进入平台，后端继续执行项目、实验和操作权限判断。
+
+| 边界 | 设计 |
+| --- | --- |
+| 身份 | 使用当前 DataCore 用户，不创建 CLI 专属账号 |
+| 数据 | 后端按项目、实验和角色裁剪 |
+| 写入 | 必须显式确认，服务端再次校验 |
+| 凭据 | 本地 Keychain 或可撤销 Token，不进入 Prompt |
+| 审计 | 通过请求 ID 关联 CLI 与平台操作记录 |
 
 ## 凭据保护
 
@@ -600,13 +673,21 @@ Source: /troubleshooting.md
 
 # 故障恢复
 
-先运行：
+先运行以下三条命令，它们分别检查本机、身份和目标工作流：
 
 ```bash
 datacore doctor
 datacore auth status
 datacore --json conductivity status TARGET
 ```
+
+| 现象 | 先做什么 | 不要做什么 |
+| --- | --- | --- |
+| CLI 无法启动 | `datacore doctor` | 反复重装前不看诊断结果 |
+| 登录失效 | `datacore auth login` | 借用他人 Token |
+| 页面可见但 CLI 无权访问 | 检查当前 CLI 身份与项目成员关系 | 绕过服务端权限 |
+| 长任务等待超时 | 查询 `status` | 直接重复提交 |
+| 五折部分失败 | `retry-fold --fold N` | 重建已完成的折 |
 
 ## 登录或授权失效
 
@@ -644,6 +725,14 @@ Source: /workflows/conductivity.md
 # 电导率预测迭代
 
 首版 CLI 覆盖 DataCore 大装置电导率预测迭代。推荐使用完整页面 URL 作为 `TARGET`，它同时保留实验、链路和轮次身份。
+
+| 当前阶段 | 常用命令 | 是否写入 |
+| --- | --- | --- |
+| 定位轮次 | `status` | 否 |
+| 生成推荐 | `recommend`、`export` | 是 / 否 |
+| 回传实测 | `validate`、`upload` | 否 / 是 |
+| 更新模型 | `train`、`retry-fold` | 是 |
+| 进入下一轮 | `compare`、`decide`、`next` | 否 / 是 |
 
 ## 1. 查看当前状态
 
@@ -698,6 +787,8 @@ datacore conductivity next TARGET --yes
 ## 长任务
 
 `--wait` 只是本地观察。关闭终端、断网或本地超时不会取消云端工作；再次执行 `status` 即可继续跟踪。
+
+遇到 Bohrium、数据校验或单折失败，请按[故障恢复](/troubleshooting/)处理，不要绕过服务端给出的 `nextAction`。
 
 
 ---

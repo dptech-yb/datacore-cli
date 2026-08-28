@@ -5,6 +5,14 @@ description: 从状态查询、推荐配方、UniLab 回传到五折训练和下
 
 首版 CLI 覆盖 DataCore 大装置电导率预测迭代。推荐使用完整页面 URL 作为 `TARGET`，它同时保留实验、链路和轮次身份。
 
+| 当前阶段 | 常用命令 | 是否写入 |
+| --- | --- | --- |
+| 定位轮次 | `status` | 否 |
+| 生成推荐 | `recommend`、`export` | 是 / 否 |
+| 回传实测 | `validate`、`upload` | 否 / 是 |
+| 更新模型 | `train`、`retry-fold` | 是 |
+| 进入下一轮 | `compare`、`decide`、`next` | 否 / 是 |
+
 ## 1. 查看当前状态
 
 ```bash
@@ -58,3 +66,5 @@ datacore conductivity next TARGET --yes
 ## 长任务
 
 `--wait` 只是本地观察。关闭终端、断网或本地超时不会取消云端工作；再次执行 `status` 即可继续跟踪。
+
+遇到 Bohrium、数据校验或单折失败，请按[故障恢复](/troubleshooting/)处理，不要绕过服务端给出的 `nextAction`。

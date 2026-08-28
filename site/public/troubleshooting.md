@@ -1,12 +1,20 @@
 # 故障恢复
 
-先运行：
+先运行以下三条命令，它们分别检查本机、身份和目标工作流：
 
 ```bash
 datacore doctor
 datacore auth status
 datacore --json conductivity status TARGET
 ```
+
+| 现象 | 先做什么 | 不要做什么 |
+| --- | --- | --- |
+| CLI 无法启动 | `datacore doctor` | 反复重装前不看诊断结果 |
+| 登录失效 | `datacore auth login` | 借用他人 Token |
+| 页面可见但 CLI 无权访问 | 检查当前 CLI 身份与项目成员关系 | 绕过服务端权限 |
+| 长任务等待超时 | 查询 `status` | 直接重复提交 |
+| 五折部分失败 | `retry-fold --fold N` | 重建已完成的折 |
 
 ## 登录或授权失效
 

@@ -9,13 +9,19 @@ export default defineConfig({
 		sitemap(),
 		starlight({
 			title: 'DataCore CLI',
-			description: 'DataCore 平台 CLI 与可安装 Agent Skills',
+			description: '从终端与 AI Agent 安全调用 DataCore 工作流',
 			defaultLocale: 'root',
 			locales: { root: { label: '简体中文', lang: 'zh-CN' } },
 			lastUpdated: true,
 			favicon: '/favicon.png',
+			logo: {
+				src: './src/assets/datacore-logo.png',
+				alt: 'DataCore',
+				replacesTitle: false,
+			},
 			customCss: ['./src/styles/custom.css'],
 			social: [
+				{ icon: 'external', label: '打开 DataCore 平台', href: 'https://datacore.dp.qifalab.cn/' },
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/dptech-yb/datacore-cli' },
 			],
 			head: [
@@ -25,7 +31,7 @@ export default defineConfig({
 					tag: 'meta',
 					attrs: {
 						property: 'og:description',
-						content: 'DataCore 平台 CLI 与可安装 Agent Skills',
+						content: '安装 CLI 与 Agent Skills，从终端、脚本或 AI Agent 安全调用 DataCore 工作流',
 					},
 				},
 				{
@@ -42,7 +48,7 @@ export default defineConfig({
 					tag: 'meta',
 					attrs: {
 						name: 'twitter:description',
-						content: 'DataCore 平台 CLI 与可安装 Agent Skills',
+						content: '安装 CLI 与 Agent Skills，从终端、脚本或 AI Agent 安全调用 DataCore 工作流',
 					},
 				},
 				{
@@ -92,6 +98,22 @@ export default defineConfig({
 						{ label: '结构化输出', slug: 'reference/output-contract' },
 						{ label: '故障恢复', slug: 'troubleshooting' },
 						{ label: '安全与发布可信度', slug: 'security' },
+					],
+				},
+				{
+					label: '相关入口',
+					collapsed: false,
+					items: [
+						{
+							label: '打开 DataCore 平台 ↗',
+							link: 'https://datacore.dp.qifalab.cn/',
+							attrs: { target: '_blank', rel: 'noopener noreferrer' },
+						},
+						{
+							label: 'GitHub 仓库 ↗',
+							link: 'https://github.com/dptech-yb/datacore-cli',
+							attrs: { target: '_blank', rel: 'noopener noreferrer' },
+						},
 					],
 				},
 			],
