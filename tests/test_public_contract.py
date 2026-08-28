@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -20,7 +21,8 @@ def test_file_credential_requires_explicit_opt_in(monkeypatch, tmp_path: Path) -
     assert storage == "file-0600"
     path = tmp_path / "datacore" / "credentials.json"
     assert json.loads(path.read_text("utf-8"))["https://example.test"] == "secret"
-    assert path.stat().st_mode & 0o777 == 0o600
+    if os.name != "nt":
+        assert path.stat().st_mode & 0o777 == 0o600
 
 
 def test_stable_exit_codes() -> None:

@@ -11,6 +11,7 @@ $InstallRoot = if ($env:DATACORE_INSTALL_ROOT) { $env:DATACORE_INSTALL_ROOT } el
 $VenvRoot = Join-Path $InstallRoot "venv"
 $ScriptsDir = Join-Path $VenvRoot "Scripts"
 $DataCoreExe = Join-Path $ScriptsDir "datacore.exe"
+$env:PYTHONUTF8 = "1"
 
 if ($Uninstall) {
     if (Test-Path $DataCoreExe) {
@@ -27,11 +28,11 @@ if ($Uninstall) {
 
 $PythonExe = $null
 $PythonPrefix = @()
-if (Get-Command py -ErrorAction SilentlyContinue) {
+if (Get-Command python -ErrorAction SilentlyContinue) {
+    $PythonExe = "python"
+} elseif (Get-Command py -ErrorAction SilentlyContinue) {
     $PythonExe = "py"
     $PythonPrefix = @("-3")
-} elseif (Get-Command python -ErrorAction SilentlyContinue) {
-    $PythonExe = "python"
 }
 if (-not $PythonExe) {
     throw "Python 3.10 or newer is required: https://www.python.org/downloads/windows/"

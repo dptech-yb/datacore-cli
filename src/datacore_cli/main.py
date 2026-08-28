@@ -23,6 +23,17 @@ from .transport import DataCoreTransport
 DEFAULT_BASE_URL = "https://datacore.dp.qifalab.cn"
 
 
+def _configure_console() -> None:
+    """Keep Chinese output readable in Windows shells with legacy code pages."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            try:
+                reconfigure(encoding="utf-8", errors="replace")
+            except (OSError, ValueError):
+                pass
+
+
 def _version() -> str:
     try:
         return importlib.metadata.version("datacore-cli")
@@ -219,6 +230,7 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    _configure_console()
     args = _parser().parse_args(argv)
     base_url = args.base_url.rstrip("/")
     try:
