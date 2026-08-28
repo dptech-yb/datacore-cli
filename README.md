@@ -20,10 +20,10 @@ curl -fsSL https://github.com/dptech-yb/datacore-cli/releases/latest/download/in
 irm https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.ps1 | iex
 ```
 
-也可以通过 PyPI 安装：
+需要固定版本或不执行引导时，也可以直接安装 GitHub Release 中的 wheel：
 
 ```bash
-python -m pip install --user datacore-cli
+python -m pip install https://github.com/dptech-yb/datacore-cli/releases/download/v0.1.0/datacore_cli-0.1.0-py3-none-any.whl
 datacore setup
 ```
 

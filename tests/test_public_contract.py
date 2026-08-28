@@ -6,9 +6,13 @@ from pathlib import Path
 
 import pytest
 
-from datacore_cli import credentials
+from datacore_cli import CommandEngine, credentials
 from datacore_cli.errors import DataCoreCliError, exit_code_for_error
 from datacore_cli.main import main
+
+
+def test_public_package_exports_command_engine() -> None:
+    assert CommandEngine.__name__ == "CommandEngine"
 
 
 def test_file_credential_requires_explicit_opt_in(monkeypatch, tmp_path: Path) -> None:
