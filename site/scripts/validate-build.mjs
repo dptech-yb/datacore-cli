@@ -3,6 +3,7 @@ import { access, readFile } from 'node:fs/promises';
 
 const dist = new URL('../dist/', import.meta.url);
 const required = [
+  '.nojekyll',
   'index.html',
   'llms.txt',
   'llms-full.txt',
