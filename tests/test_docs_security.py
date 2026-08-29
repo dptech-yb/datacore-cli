@@ -1,8 +1,10 @@
+import runpy
 from pathlib import Path
 
 import pytest
 
-from scripts.generate_docs import regular_skill_files
+GENERATE_DOCS = Path(__file__).resolve().parents[1] / "scripts" / "generate_docs.py"
+regular_skill_files = runpy.run_path(str(GENERATE_DOCS))["regular_skill_files"]
 
 
 def test_skill_publication_rejects_symbolic_links(tmp_path: Path) -> None:
