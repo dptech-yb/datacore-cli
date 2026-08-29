@@ -6,7 +6,7 @@ import os
 import shutil
 import tempfile
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -146,7 +146,7 @@ def _remove_path(path: Path) -> None:
 
 
 def _backup_path(path: Path, *, label: str, skill_name: str) -> Path:
-    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     root = canonical_skills_root().parent / "datacore-skill-backups" / stamp / label
     target = root / skill_name
     counter = 1
@@ -336,7 +336,7 @@ def install_skills(
             "skills": names,
             "digests": digests,
             "adapters": adapters,
-            "updatedAt": datetime.now(UTC).isoformat(),
+            "updatedAt": datetime.now(timezone.utc).isoformat(),
         }
     )
     return {
