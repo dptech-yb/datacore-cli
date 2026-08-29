@@ -66,4 +66,49 @@ for (const endpoint of [
   }
 }
 
+const themeCss = await readFile(new URL('../src/styles/custom.css', import.meta.url), 'utf8');
+for (const fragment of [
+  '--sl-color-white: #0b1324;',
+  '--sl-color-black: #fbfcfe;',
+  ":root[data-theme='dark']",
+  '--sl-color-white: #f8fafc;',
+  '--sl-color-black: #09101f;',
+  'background: #0d1629 !important;',
+  'color: #e8eef9;',
+]) {
+  if (!themeCss.includes(fragment)) {
+    throw new Error('Theme contrast contract is missing: ' + fragment);
+  }
+}
+
+function channel(value) {
+  const normalized = value / 255;
+  return normalized <= 0.04045
+    ? normalized / 12.92
+    : ((normalized + 0.055) / 1.055) ** 2.4;
+}
+
+function luminance(hex) {
+  const channels = hex.match(/[a-f0-9]{2}/gi).map((value) => channel(Number.parseInt(value, 16)));
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+}
+
+function contrast(foreground, background) {
+  const lighter = Math.max(luminance(foreground), luminance(background));
+  const darker = Math.min(luminance(foreground), luminance(background));
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+for (const [name, foreground, background] of [
+  ['light document', '#39465e', '#fbfcfe'],
+  ['dark document', '#bdc7d7', '#09101f'],
+  ['light inline code', '#0b1324', '#f0f3f8'],
+  ['dark inline code', '#f8fafc', '#1b2537'],
+  ['code block', '#e8eef9', '#0d1629'],
+]) {
+  if (contrast(foreground, background) < 4.5) {
+    throw new Error(name + ' contrast is below WCAG AA');
+  }
+}
+
 console.log('Validated ' + required.length + ' published artifacts in ' + dist.pathname);
