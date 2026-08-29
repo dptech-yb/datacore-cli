@@ -64,8 +64,8 @@ raise SystemExit(0 if load_token(DEFAULT_BASE_URL) else 1)
     if [ "$HAS_AUTHORIZATION" -eq 1 ]; then
       "$CLI" auth logout >/dev/null 2>&1 || REMOTE_REVOCATION_WARNING=1
     fi
-    "$CLI" uninstall --yes >/dev/null 2>&1 || {
-      printf '%s\n' "Warning: local credential or DataCore Skills could not be removed automatically." >&2
+    "$CLI" skills uninstall --yes >/dev/null 2>&1 || {
+      printf '%s\n' "Warning: DataCore Skills could not be removed automatically." >&2
     }
   else
     "$CLI" skills uninstall --yes >/dev/null 2>&1 || {

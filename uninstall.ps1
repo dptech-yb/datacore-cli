@@ -44,9 +44,9 @@ if ($Cli) {
             } catch { $RemoteRevocationWarning = $true }
         }
         try {
-            & $Cli uninstall --yes | Out-Null
-            if ($LASTEXITCODE -ne 0) { Write-Warning "Local credential or DataCore Skills could not be removed automatically." }
-        } catch { Write-Warning "Local credential or DataCore Skills could not be removed automatically." }
+            & $Cli skills uninstall --yes | Out-Null
+            if ($LASTEXITCODE -ne 0) { Write-Warning "DataCore Skills could not be removed automatically." }
+        } catch { Write-Warning "DataCore Skills could not be removed automatically." }
     } else {
         try {
             & $Cli skills uninstall --yes | Out-Null
@@ -119,3 +119,4 @@ if ($RemoteRevocationWarning) {
 if (-not $KeepAuthorization -and $env:DATACORE_TOKEN) {
     Write-Warning "DATACORE_TOKEN is still set in the environment; remove it from the environment or secret manager separately."
 }
+exit 0
