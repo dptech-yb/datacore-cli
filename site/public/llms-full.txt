@@ -6,6 +6,7 @@ DataCore CLI 将平台能力提供给终端、自动化程序和 AI Agent。
 
 - 人类文档：https://datacore-cli.dp.cd.mba/
 - 命令清单：https://datacore-cli.dp.cd.mba/commands.json
+- Skills 发现：https://datacore-cli.dp.cd.mba/.well-known/agent-skills/index.json
 - 基础 Skill：https://datacore-cli.dp.cd.mba/skills/datacore/SKILL.md
 - 电导 Skill：https://datacore-cli.dp.cd.mba/skills/datacore-conductivity/SKILL.md
 
@@ -45,10 +46,20 @@ Agent 只需要处理三个稳定界面：
 
 ## Skills 在哪里
 
-安装包会把 Skills 同步到本机支持的 Agent 目录。其他 Agent 也可以直接读取公开版本：
+安装包会把 Skills 的统一副本写入 `~/.agents/skills`，并为检测到的非通用 Agent 建立适配目录。它不是 Codex 专属能力；Claude Code、Cursor、Gemini CLI、Trae 以及其他兼容 Agent Skills 的工具可以使用同一份指令。
+
+支持标准 Skills 管理器的环境可以直接安装：
+
+```bash
+npx skills add https://datacore-cli.dp.cd.mba -g -y
+```
+
+也可以直接读取公开版本：
 
 - [DataCore 基础 Skill](/skills/datacore/SKILL.md)
 - [电导工作流 Skill](/skills/datacore-conductivity/SKILL.md)
+
+运行时若不方便访问文件系统，Agent 也可以使用 `datacore skills list` 发现能力，再用 `datacore skills read datacore` 或 `datacore skills read datacore-conductivity` 读取完整说明。这与飞书 CLI 的 Skill 发现/读取方式一致，但执行仍统一走 DataCore CLI。
 
 如果 Agent 不支持 Skill 发现机制，也可以读取 [llms.txt](/llms.txt)、[完整上下文](/llms-full.txt) 和 [commands.json](/commands.json)。
 
@@ -171,7 +182,10 @@ irm https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.p
 
 1. 从官方 GitHub Release 下载 wheel；
 2. 用同一 Release 的 `SHA256SUMS` 校验文件；
-3. 安装 CLI，并准备同步 DataCore Skills。
+3. 安装 CLI，并把 Skills 同步到开放 Agent Skills 目录；
+4. 自动适配本机已有的 Claude Code、Codex、Continue、Trae 等 Agent。
+
+Skills 的统一来源是 `~/.agents/skills`。需要专属目录的 Agent 会使用指向统一来源的链接；Windows 或不支持符号链接的文件系统会自动回退为复制。升级自 v0.1—v0.3 时，原有 `~/.codex/skills` 内容会迁移；若检测到用户修改，安装程序会先备份再替换。
 
 ## 2. 初始化并检查
 
@@ -180,9 +194,27 @@ datacore setup
 datacore doctor
 datacore auth status
 datacore skills list
+datacore skills read datacore
 ```
 
 `datacore setup` 会同步 Skills，并在浏览器中打开 [DataCore 平台](https://datacore.dp.qifalab.cn/)授权页。密码、飞书和 Bohrium 登录最终都绑定到当前平台账号。
+
+### 使用标准 Skills 管理器
+
+CLI 已安装、但需要给另一种 Agent 单独同步 Skills 时，可以使用开放 Skills 管理器：
+
+```bash
+npx skills add https://datacore-cli.dp.cd.mba -g -y
+```
+
+它会从 DataCore 的标准发现地址读取 Skills，并适配其支持的 Agent。没有 Node.js 时不影响一键安装；DataCore 自带安装器仍会完成通用目录和已检测 Agent 的同步。
+
+未被自动识别的非通用 Agent，也可以明确指定：
+
+```bash
+datacore skills install --agent claude-code --force
+datacore skills install --agent '*' --force
+```
 
 ### 让 Agent 独立完成安装
 
@@ -210,7 +242,7 @@ datacore --json conductivity status '完整的 DataCore 电导页面 URL'
 
 ```bash
 curl -fsSL https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.sh \
-  | sh -s -- --version v0.3.0 --no-setup
+  | sh -s -- --version v0.4.0 --no-setup
 ```
 
 也可以从 [GitHub Releases](https://github.com/dptech-yb/datacore-cli/releases) 下载 wheel、校验和、SBOM 和 Sigstore bundle。
@@ -222,7 +254,7 @@ datacore update
 datacore uninstall --yes
 ```
 
-更新会同步 CLI 与 Skills。卸载会撤销当前设备授权，并清理 CLI 与 DataCore Skills。
+更新从官方 GitHub Release 下载 wheel，按同一 Release 的 `SHA256SUMS` 校验后安装，再同步 Skills；不依赖 PyPI。卸载会撤销当前设备授权，并清理 CLI 与 DataCore Skills。
 
 遇到安装或授权问题，请先查看[故障恢复](/troubleshooting/)；完整参数见[CLI 命令参考](/reference/commands/)。
 
@@ -343,7 +375,7 @@ Source: /reference/commands.md
 
 ## `datacore skills install`
 
-将内置 Skills 同步到本机
+将内置 Skills 同步到通用 Agent 目录
 
 ### 选项
 
@@ -355,6 +387,8 @@ Source: /reference/commands.md
 | `--timeout` | HTTP 请求超时秒数 |
 | `--version` | show program's version number and exit |
 | `--force` | — |
+| `--agent` | 为指定的非通用 Agent 添加适配目录；可重复，使用 * 表示全部 |
+| `--copy` | 复制到 Agent 目录而非创建符号链接 |
 
 ## `datacore skills list`
 
@@ -369,6 +403,41 @@ Source: /reference/commands.md
 | `--request-id` | 为本次调用指定可追踪请求 ID |
 | `--timeout` | HTTP 请求超时秒数 |
 | `--version` | show program's version number and exit |
+
+## `datacore skills read`
+
+读取一个内置 Skill 的完整说明
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `name` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+
+## `datacore skills uninstall`
+
+移除 DataCore Skills
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--yes` | — |
 
 ## `datacore quota`
 
@@ -1273,6 +1342,8 @@ CLI 是 DataCore 的确定性执行层，不是权限代理。每个请求都以
 
 一键安装脚本会在安装前校验 wheel 的 SHA256。发布工作流从仓库标签自动构建，不使用开发者本机产物。
 
+DataCore 官方一键安装器不依赖 Node.js，也不会在后台执行未固定版本的第三方包。`npx skills add` 是面向已有标准 Skills 管理器用户的可选入口；使用时应由用户显式执行，并遵循该管理器自身的版本锁定和供应链策略。公开 Skill 发现清单为每个归档提供 SHA256 摘要。
+
 ## 报告漏洞
 
 请使用 GitHub 的私密漏洞报告，不要公开提交可能涉及凭据泄露、越权、命令注入或供应链篡改的问题。详见仓库 [SECURITY.md](https://github.com/dptech-yb/datacore-cli/blob/main/SECURITY.md)。
@@ -1295,6 +1366,7 @@ datacore --json conductivity status TARGET
 | 现象 | 先做什么 | 不要做什么 |
 | --- | --- | --- |
 | CLI 无法启动 | `datacore doctor` | 反复重装前不看诊断结果 |
+| Agent 没发现 Skills | `datacore skills list` | 把同一 Skill 手工复制到多个目录 |
 | 登录失效 | `datacore auth login` | 借用他人 Token |
 | 页面可见但 CLI 无权访问 | 检查当前 CLI 身份与项目成员关系 | 绕过服务端权限 |
 | 长任务等待超时 | 查询 `status` | 直接重复提交 |
@@ -1303,6 +1375,18 @@ datacore --json conductivity status TARGET
 ## 登录或授权失效
 
 重新运行 `datacore auth login`。不要借用或索取其他人的 Token。
+
+## Agent 没有发现 Skills
+
+先运行 `datacore skills list`，确认 `canonicalPath` 下两个 Skill 均已安装。然后重新同步目标 Agent：
+
+```bash
+datacore skills install --agent claude-code --force
+```
+
+如果需要确认 Agent 实际应读取的内容，可运行 `datacore skills read datacore`。
+
+也可以用 `npx skills add https://datacore-cli.dp.cd.mba -g -y` 交给标准 Skills 管理器处理。重启或新建 Agent 会话后再验证；多数 Agent 只在会话启动时扫描 Skills。
 
 ## 权限不足
 
@@ -1477,6 +1561,11 @@ Source: /skills/datacore/SKILL.md
 ---
 name: datacore
 description: "Use DataCore platform capabilities through the datacore CLI. Apply when a user asks to inspect or operate DataCore projects, experiments, conductivity optimization, reports, tools, reservations, reagents, or other DataCore resources. The CLI always acts as the signed-in DataCore user and preserves platform permissions."
+metadata:
+  version: "0.4.0"
+  requires:
+    bins: ["datacore"]
+  cliHelp: "datacore --help"
 ---
 
 # DataCore
@@ -1506,9 +1595,14 @@ Source: /skills/datacore-conductivity/SKILL.md
 ---
 name: datacore-conductivity
 description: "Inspect and operate DataCore's conductivity Bayesian-optimization loop through the datacore CLI. Apply for conductivity round status, recommendations, UniLab exports, measured-result validation/upload, five-fold training, fold recovery, model comparison, stop/continue decisions, or opening the next round."
+metadata:
+  version: "0.4.0"
+  requires:
+    bins: ["datacore"]
+  cliHelp: "datacore conductivity --help"
 ---
 
-# Datacore Conductivity
+# DataCore Conductivity
 
 Accept the full DataCore conductivity page URL as the preferred target. It preserves experiment, chain, and round identity; a raw `round...` identifier is acceptable only for round-scoped actions.
 

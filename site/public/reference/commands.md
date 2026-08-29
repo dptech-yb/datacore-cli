@@ -110,7 +110,7 @@
 
 ## `datacore skills install`
 
-将内置 Skills 同步到本机
+将内置 Skills 同步到通用 Agent 目录
 
 ### 选项
 
@@ -122,6 +122,8 @@
 | `--timeout` | HTTP 请求超时秒数 |
 | `--version` | show program's version number and exit |
 | `--force` | — |
+| `--agent` | 为指定的非通用 Agent 添加适配目录；可重复，使用 * 表示全部 |
+| `--copy` | 复制到 Agent 目录而非创建符号链接 |
 
 ## `datacore skills list`
 
@@ -136,6 +138,41 @@
 | `--request-id` | 为本次调用指定可追踪请求 ID |
 | `--timeout` | HTTP 请求超时秒数 |
 | `--version` | show program's version number and exit |
+
+## `datacore skills read`
+
+读取一个内置 Skill 的完整说明
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `name` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+
+## `datacore skills uninstall`
+
+移除 DataCore Skills
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--yes` | — |
 
 ## `datacore quota`
 

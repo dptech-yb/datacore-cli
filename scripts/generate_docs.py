@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import shutil
 import sys
+import zipfile
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "site"
 DOCS = SITE / "src" / "content" / "docs"
 PUBLIC = SITE / "public"
+AGENT_SKILLS_SCHEMA = "https://schemas.agentskills.io/discovery/0.2.0/schema.json"
 sys.path.insert(0, str(ROOT / "src"))
 
 from datacore_cli import __version__  # noqa: E402
@@ -91,6 +94,41 @@ def frontmatter_and_body(path: Path) -> tuple[str, str]:
     return title, body
 
 
+def frontmatter_value(path: Path, key: str) -> str:
+    text = path.read_text(encoding="utf-8")
+    if not text.startswith("---\n"):
+        return ""
+    marker = text.find("\n---\n", 4)
+    if marker < 0:
+        return ""
+    prefix = f"{key}:"
+    for line in text[4:marker].splitlines():
+        if line.startswith(prefix):
+            return line.partition(":")[2].strip().strip('"').strip("'")
+    return ""
+
+
+def regular_skill_files(source: Path) -> list[Path]:
+    files: list[Path] = []
+    for path in sorted(source.rglob("*")):
+        if path.is_symlink():
+            raise RuntimeError(f"Skill source must not contain symbolic links: {path}")
+        if path.is_file():
+            files.append(path)
+    return files
+
+
+def write_skill_archive(source: Path, target: Path) -> str:
+    with zipfile.ZipFile(target, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+        for path in regular_skill_files(source):
+            info = zipfile.ZipInfo(path.relative_to(source).as_posix())
+            info.date_time = (1980, 1, 1, 0, 0, 0)
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o644 << 16
+            archive.writestr(info, path.read_bytes())
+    return f"sha256:{hashlib.sha256(target.read_bytes()).hexdigest()}"
+
+
 def write_command_reference(commands: list[dict[str, Any]]) -> None:
     lines = [
         "---",
@@ -146,15 +184,64 @@ def write_agent_surfaces(commands: list[dict[str, Any]]) -> None:
         + "\n",
         encoding="utf-8",
     )
-    skills = [
-        ROOT / "src" / "datacore_cli" / "skills" / "datacore" / "SKILL.md",
-        ROOT / "src" / "datacore_cli" / "skills" / "datacore-conductivity" / "SKILL.md",
+    skill_dirs = [
+        ROOT / "src" / "datacore_cli" / "skills" / "datacore",
+        ROOT / "src" / "datacore_cli" / "skills" / "datacore-conductivity",
     ]
-    for source in skills:
-        target = PUBLIC / "skills" / source.parent.name
+    skill_files = {source: regular_skill_files(source) for source in skill_dirs}
+    for source in skill_dirs:
+        target = PUBLIC / "skills" / source.name
         if target.exists():
             shutil.rmtree(target)
-        shutil.copytree(source.parent, target)
+        shutil.copytree(source, target)
+
+    legacy_discovery = {
+        "skills": [
+            {
+                "name": source.name,
+                "description": frontmatter_value(source / "SKILL.md", "description"),
+                "files": [path.relative_to(source).as_posix() for path in skill_files[source]],
+            }
+            for source in skill_dirs
+        ]
+    }
+    preferred_root = PUBLIC / ".well-known" / "agent-skills"
+    if preferred_root.exists():
+        shutil.rmtree(preferred_root)
+    preferred_root.mkdir(parents=True)
+    preferred_entries: list[dict[str, str]] = []
+    for source in skill_dirs:
+        archive_name = f"{source.name}.zip"
+        digest = write_skill_archive(source, preferred_root / archive_name)
+        preferred_entries.append(
+            {
+                "name": source.name,
+                "type": "archive",
+                "description": frontmatter_value(source / "SKILL.md", "description"),
+                "url": archive_name,
+                "digest": digest,
+            }
+        )
+    (preferred_root / "index.json").write_text(
+        json.dumps(
+            {"$schema": AGENT_SKILLS_SCHEMA, "skills": preferred_entries},
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    legacy_root = PUBLIC / ".well-known" / "skills"
+    if legacy_root.exists():
+        shutil.rmtree(legacy_root)
+    legacy_root.mkdir(parents=True)
+    (legacy_root / "index.json").write_text(
+        json.dumps(legacy_discovery, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    for source in skill_dirs:
+        shutil.copytree(source, legacy_root / source.name)
 
     raw_pages: list[tuple[str, str, str]] = []
     for source in sorted(DOCS.rglob("*.md")):
@@ -174,6 +261,7 @@ DataCore CLI 将平台能力提供给终端、自动化程序和 AI Agent。
 
 - 人类文档：https://datacore-cli.dp.cd.mba/
 - 命令清单：https://datacore-cli.dp.cd.mba/commands.json
+- Skills 发现：https://datacore-cli.dp.cd.mba/.well-known/agent-skills/index.json
 - 基础 Skill：https://datacore-cli.dp.cd.mba/skills/datacore/SKILL.md
 - 电导 Skill：https://datacore-cli.dp.cd.mba/skills/datacore-conductivity/SKILL.md
 """
@@ -197,6 +285,7 @@ DataCore CLI 将平台能力提供给终端、自动化程序和 AI Agent。
         "## Machine-readable",
         "",
         "- [commands.json](/commands.json)",
+        "- [Agent Skills discovery](/.well-known/agent-skills/index.json)",
         "- [DataCore Skill](/skills/datacore/SKILL.md)",
         "- [Conductivity Skill](/skills/datacore-conductivity/SKILL.md)",
         "",
@@ -205,10 +294,10 @@ DataCore CLI 将平台能力提供给终端、自动化程序和 AI Agent。
     full_sections = [index_text]
     for _title, path, raw in raw_pages:
         full_sections.append(f"\n---\n\nSource: {path}\n\n{raw}")
-    for source in skills:
+    for source in skill_dirs:
         full_sections.append(
-            f"\n---\n\nSource: /skills/{source.parent.name}/SKILL.md\n\n"
-            + source.read_text(encoding="utf-8")
+            f"\n---\n\nSource: /skills/{source.name}/SKILL.md\n\n"
+            + (source / "SKILL.md").read_text(encoding="utf-8")
         )
     (PUBLIC / "llms-full.txt").write_text("\n".join(full_sections), encoding="utf-8")
     (PUBLIC / "agent.json").write_text(
@@ -219,6 +308,9 @@ DataCore CLI 将平台能力提供给终端、自动化程序和 AI Agent。
                 "documentation": "https://datacore-cli.dp.cd.mba/",
                 "llms": "https://datacore-cli.dp.cd.mba/llms.txt",
                 "commands": "https://datacore-cli.dp.cd.mba/commands.json",
+                "skillDiscovery": (
+                    "https://datacore-cli.dp.cd.mba/.well-known/agent-skills/index.json"
+                ),
                 "skills": [
                     "https://datacore-cli.dp.cd.mba/skills/datacore/SKILL.md",
                     "https://datacore-cli.dp.cd.mba/skills/datacore-conductivity/SKILL.md",

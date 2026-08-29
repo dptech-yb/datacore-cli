@@ -4,6 +4,7 @@
   "documentation": "https://datacore-cli.dp.cd.mba/",
   "llms": "https://datacore-cli.dp.cd.mba/llms.txt",
   "commands": "https://datacore-cli.dp.cd.mba/commands.json",
+  "skillDiscovery": "https://datacore-cli.dp.cd.mba/.well-known/agent-skills/index.json",
   "skills": [
     "https://datacore-cli.dp.cd.mba/skills/datacore/SKILL.md",
     "https://datacore-cli.dp.cd.mba/skills/datacore-conductivity/SKILL.md"

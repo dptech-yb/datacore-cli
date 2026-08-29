@@ -1,0 +1,25 @@
+{
+  "skills": [
+    {
+      "name": "datacore",
+      "description": "Use DataCore platform capabilities through the datacore CLI. Apply when a user asks to inspect or operate DataCore projects, experiments, conductivity optimization, reports, tools, reservations, reagents, or other DataCore resources. The CLI always acts as the signed-in DataCore user and preserves platform permissions.",
+      "files": [
+        "SKILL.md",
+        "agents/openai.yaml",
+        "references/cli-conventions.md",
+        "references/experimental-resources.md",
+        "references/projects-and-experiments.md"
+      ]
+    },
+    {
+      "name": "datacore-conductivity",
+      "description": "Inspect and operate DataCore's conductivity Bayesian-optimization loop through the datacore CLI. Apply for conductivity round status, recommendations, UniLab exports, measured-result validation/upload, five-fold training, fold recovery, model comparison, stop/continue decisions, or opening the next round.",
+      "files": [
+        "SKILL.md",
+        "agents/openai.yaml",
+        "references/commands.md",
+        "references/recovery.md"
+      ]
+    }
+  ]
+}

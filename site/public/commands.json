@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1",
   "cli": "datacore",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "generatedFrom": "src/datacore_cli/main.py",
   "commands": [
     {
@@ -492,7 +492,7 @@
     },
     {
       "command": "datacore skills install",
-      "summary": "将内置 Skills 同步到本机",
+      "summary": "将内置 Skills 同步到通用 Agent 目录",
       "arguments": [
         {
           "name": "base_url",
@@ -551,6 +551,26 @@
           ],
           "required": false,
           "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "agent",
+          "flags": [
+            "--agent"
+          ],
+          "required": false,
+          "help": "为指定的非通用 Agent 添加适配目录；可重复，使用 * 表示全部",
+          "choices": [],
+          "default": []
+        },
+        {
+          "name": "copy",
+          "flags": [
+            "--copy"
+          ],
+          "required": false,
+          "help": "复制到 Agent 目录而非创建符号链接",
           "choices": [],
           "default": false
         }
@@ -614,6 +634,140 @@
         }
       ],
       "requiresConfirmation": false,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore skills read",
+      "summary": "读取一个内置 Skill 的完整说明",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "name",
+          "flags": [],
+          "required": true,
+          "help": "Skill 名称",
+          "choices": [],
+          "default": null
+        }
+      ],
+      "requiresConfirmation": false,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore skills uninstall",
+      "summary": "移除 DataCore Skills",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "yes",
+          "flags": [
+            "--yes"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        }
+      ],
+      "requiresConfirmation": true,
       "supportsJson": true
     },
     {

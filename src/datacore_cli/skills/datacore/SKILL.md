@@ -1,6 +1,11 @@
 ---
 name: datacore
 description: "Use DataCore platform capabilities through the datacore CLI. Apply when a user asks to inspect or operate DataCore projects, experiments, conductivity optimization, reports, tools, reservations, reagents, or other DataCore resources. The CLI always acts as the signed-in DataCore user and preserves platform permissions."
+metadata:
+  version: "0.4.0"
+  requires:
+    bins: ["datacore"]
+  cliHelp: "datacore --help"
 ---
 
 # DataCore

@@ -25,11 +25,19 @@ irm https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.p
 需要固定版本或不执行引导时，也可以直接安装 GitHub Release 中的 wheel：
 
 ```bash
-python -m pip install https://github.com/dptech-yb/datacore-cli/releases/download/v0.3.0/datacore_cli-0.3.0-py3-none-any.whl
+python -m pip install https://github.com/dptech-yb/datacore-cli/releases/download/v0.4.0/datacore_cli-0.4.0-py3-none-any.whl
 datacore setup
 ```
 
 安装脚本会验证 Release 中 wheel 的 SHA256，然后安装 CLI、同步 Skills 并引导浏览器授权。密码、飞书和 Bohrium 登录最终均授权给当前 DataCore 平台账号。
+
+Skills 采用开放 Agent Skills 结构，统一安装到 `~/.agents/skills`。安装程序会识别已有的 Claude Code、Codex、Continue、Trae 等非通用目录并建立适配链接；Windows 或不支持符号链接的环境自动回退为复制。v0.1—v0.3 的 Codex 专属目录会在升级时无损迁移。
+
+如果 CLI 已安装，只想通过标准 Skills 管理器同步到其他 Agent，可以执行：
+
+```bash
+npx skills add https://datacore-cli.dp.cd.mba -g -y
+```
 
 ### 交给 Agent 安装
 
@@ -48,6 +56,8 @@ datacore setup
 datacore doctor
 datacore auth status
 datacore skills list
+datacore skills read datacore
+datacore skills install --force
 datacore --json capabilities
 datacore --json quota
 ```
@@ -106,7 +116,7 @@ datacore update
 datacore uninstall --yes
 ```
 
-也可以重新运行对应平台的安装脚本。重复安装是幂等的，并会同步最新 Skills。
+`datacore update` 从官方 GitHub Release 下载 wheel，按同一 Release 的 `SHA256SUMS` 校验后安装，再同步 Skills；不依赖 PyPI。也可以重新运行对应平台的安装脚本。重复安装是幂等的，并会同步最新 Skills。非通用 Agent 没有被自动识别时，可运行 `datacore skills install --agent NAME --force`；使用 `--agent '*'` 可为所有内置适配目标安装。`datacore skills read NAME` 可直接向 Agent 返回完整 Skill 内容，无需猜测本机目录。
 
 ## 发布可信度
 

@@ -15,5 +15,6 @@
 ## Machine-readable
 
 - [commands.json](/commands.json)
+- [Agent Skills discovery](/.well-known/agent-skills/index.json)
 - [DataCore Skill](/skills/datacore/SKILL.md)
 - [Conductivity Skill](/skills/datacore-conductivity/SKILL.md)

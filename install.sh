@@ -10,7 +10,7 @@ ALLOW_FILE_CREDENTIAL=0
 UNINSTALL=0
 
 usage() {
-  printf '%s\n' "Usage: install.sh [--version v0.3.0] [--no-setup] [--allow-file-credential] [--uninstall]"
+  printf '%s\n' "Usage: install.sh [--version v0.4.0] [--no-setup] [--allow-file-credential] [--uninstall]"
 }
 
 while [ "$#" -gt 0 ]; do
@@ -29,12 +29,34 @@ while [ "$#" -gt 0 ]; do
 done
 
 if [ "$UNINSTALL" -eq 1 ]; then
-  if [ -x "$INSTALL_ROOT/venv/bin/datacore" ]; then
-    "$INSTALL_ROOT/venv/bin/datacore" auth logout >/dev/null 2>&1 || true
+  if [ ! -e "$INSTALL_ROOT" ]; then
+    [ ! -L "$BIN_DIR/datacore" ] || rm -f "$BIN_DIR/datacore"
+    printf '%s\n' "DataCore CLI is not installed."
+    exit 0
   fi
-  rm -f "$BIN_DIR/datacore"
-  rm -rf "$INSTALL_ROOT"
-  rm -rf "$HOME/.codex/skills/datacore" "$HOME/.codex/skills/datacore-conductivity"
+  INSTALL_REAL="$(cd "$INSTALL_ROOT" 2>/dev/null && pwd -P)" || {
+    printf '%s\n' "Refusing uninstall: install root is not a directory." >&2
+    exit 1
+  }
+  HOME_REAL="$(cd "$HOME" 2>/dev/null && pwd -P)"
+  case "$INSTALL_REAL" in
+    /|"$HOME_REAL")
+      printf 'Refusing uninstall from unsafe path: %s\n' "$INSTALL_REAL" >&2
+      exit 1
+      ;;
+  esac
+  if [ ! -f "$INSTALL_REAL/.datacore-cli-install" ] && [ ! -x "$INSTALL_REAL/venv/bin/datacore" ]; then
+    printf 'Refusing uninstall: %s is not a DataCore CLI installation.\n' "$INSTALL_REAL" >&2
+    exit 1
+  fi
+  if [ -x "$INSTALL_REAL/venv/bin/datacore" ]; then
+    "$INSTALL_REAL/venv/bin/datacore" auth logout >/dev/null 2>&1 || true
+    "$INSTALL_REAL/venv/bin/datacore" skills uninstall --yes >/dev/null 2>&1 || {
+      printf '%s\n' "Warning: DataCore Skills could not be removed automatically." >&2
+    }
+  fi
+  [ ! -L "$BIN_DIR/datacore" ] || rm -f "$BIN_DIR/datacore"
+  rm -rf "$INSTALL_REAL"
   printf '%s\n' "DataCore CLI and DataCore Skills were removed."
   exit 0
 fi
@@ -93,6 +115,7 @@ if [ ! -x "$INSTALL_ROOT/venv/bin/python" ]; then
   "$PYTHON" -m venv "$INSTALL_ROOT/venv"
 fi
 "$INSTALL_ROOT/venv/bin/python" -m pip install --disable-pip-version-check --upgrade "$TMP/$WHEEL"
+printf '%s\n' "$PACKAGE_VERSION" > "$INSTALL_ROOT/.datacore-cli-install"
 ln -sf "$INSTALL_ROOT/venv/bin/datacore" "$BIN_DIR/datacore"
 
 case ":$PATH:" in
@@ -100,6 +123,7 @@ case ":$PATH:" in
   *)
     PROFILE="$HOME/.profile"
     [ "${SHELL:-}" = "/bin/zsh" ] && PROFILE="$HOME/.zprofile"
+    # shellcheck disable=SC2016 # Persist a literal expression for future shells.
     LINE='export PATH="$HOME/.local/bin:$PATH"'
     if [ ! -f "$PROFILE" ] || ! grep -F "$LINE" "$PROFILE" >/dev/null 2>&1; then
       printf '\n%s\n' "$LINE" >> "$PROFILE"
@@ -109,7 +133,6 @@ case ":$PATH:" in
     ;;
 esac
 
-"$BIN_DIR/datacore" skills install --force
 printf 'Installed DataCore CLI %s.\n' "$PACKAGE_VERSION"
 
 if [ "$RUN_SETUP" -eq 1 ]; then
@@ -119,5 +142,6 @@ if [ "$RUN_SETUP" -eq 1 ]; then
     "$BIN_DIR/datacore" setup
   fi
 else
+  "$BIN_DIR/datacore" skills install --force
   printf '%s\n' "Run 'datacore setup' to authorize this device."
 fi

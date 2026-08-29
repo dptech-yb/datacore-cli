@@ -6,5 +6,6 @@ DataCore CLI 将平台能力提供给终端、自动化程序和 AI Agent。
 
 - 人类文档：https://datacore-cli.dp.cd.mba/
 - 命令清单：https://datacore-cli.dp.cd.mba/commands.json
+- Skills 发现：https://datacore-cli.dp.cd.mba/.well-known/agent-skills/index.json
 - 基础 Skill：https://datacore-cli.dp.cd.mba/skills/datacore/SKILL.md
 - 电导 Skill：https://datacore-cli.dp.cd.mba/skills/datacore-conductivity/SKILL.md

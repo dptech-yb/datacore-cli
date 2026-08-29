@@ -14,6 +14,7 @@ datacore --json conductivity status TARGET
 | 现象 | 先做什么 | 不要做什么 |
 | --- | --- | --- |
 | CLI 无法启动 | `datacore doctor` | 反复重装前不看诊断结果 |
+| Agent 没发现 Skills | `datacore skills list` | 把同一 Skill 手工复制到多个目录 |
 | 登录失效 | `datacore auth login` | 借用他人 Token |
 | 页面可见但 CLI 无权访问 | 检查当前 CLI 身份与项目成员关系 | 绕过服务端权限 |
 | 长任务等待超时 | 查询 `status` | 直接重复提交 |
@@ -22,6 +23,18 @@ datacore --json conductivity status TARGET
 ## 登录或授权失效
 
 重新运行 `datacore auth login`。不要借用或索取其他人的 Token。
+
+## Agent 没有发现 Skills
+
+先运行 `datacore skills list`，确认 `canonicalPath` 下两个 Skill 均已安装。然后重新同步目标 Agent：
+
+```bash
+datacore skills install --agent claude-code --force
+```
+
+如果需要确认 Agent 实际应读取的内容，可运行 `datacore skills read datacore`。
+
+也可以用 `npx skills add https://datacore-cli.dp.cd.mba -g -y` 交给标准 Skills 管理器处理。重启或新建 Agent 会话后再验证；多数 Agent 只在会话启动时扫描 Skills。
 
 ## 权限不足
 

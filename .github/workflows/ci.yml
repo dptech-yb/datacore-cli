@@ -58,6 +58,9 @@ jobs:
             sh install.sh --version "v$package_version" --no-setup
           "$test_home/bin/datacore" --version
           "$test_home/bin/datacore" skills list
+          HOME="$test_home" DATACORE_INSTALL_ROOT="$test_home/app" DATACORE_BIN_DIR="$test_home/bin" \
+            sh install.sh --uninstall
+          test ! -e "$test_home/app"
 
   unix-installer:
     name: Installer / ${{ matrix.os }}
@@ -90,6 +93,9 @@ jobs:
             sh install.sh --version "v$package_version" --no-setup
           "$test_home/bin/datacore" --version
           "$test_home/bin/datacore" skills list
+          HOME="$test_home" DATACORE_INSTALL_ROOT="$test_home/app" DATACORE_BIN_DIR="$test_home/bin" \
+            sh install.sh --uninstall
+          test ! -e "$test_home/app"
 
   windows-installer:
     runs-on: windows-latest
@@ -124,6 +130,8 @@ jobs:
             & ./install.ps1 -Version "v$packageVersion" -NoSetup
             & (Join-Path $env:DATACORE_INSTALL_ROOT "venv\Scripts\datacore.exe") --version
             & (Join-Path $env:DATACORE_INSTALL_ROOT "venv\Scripts\datacore.exe") skills list
+            & ./install.ps1 -Uninstall
+            if (Test-Path $env:DATACORE_INSTALL_ROOT) { throw "Uninstall left the install root behind." }
           }
           finally {
             Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue

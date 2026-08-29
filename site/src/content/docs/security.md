@@ -34,6 +34,8 @@ CLI 是 DataCore 的确定性执行层，不是权限代理。每个请求都以
 
 一键安装脚本会在安装前校验 wheel 的 SHA256。发布工作流从仓库标签自动构建，不使用开发者本机产物。
 
+DataCore 官方一键安装器不依赖 Node.js，也不会在后台执行未固定版本的第三方包。`npx skills add` 是面向已有标准 Skills 管理器用户的可选入口；使用时应由用户显式执行，并遵循该管理器自身的版本锁定和供应链策略。公开 Skill 发现清单为每个归档提供 SHA256 摘要。
+
 ## 报告漏洞
 
 请使用 GitHub 的私密漏洞报告，不要公开提交可能涉及凭据泄露、越权、命令注入或供应链篡改的问题。详见仓库 [SECURITY.md](https://github.com/dptech-yb/datacore-cli/blob/main/SECURITY.md)。

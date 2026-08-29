@@ -22,7 +22,10 @@ irm https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.p
 
 1. 从官方 GitHub Release 下载 wheel；
 2. 用同一 Release 的 `SHA256SUMS` 校验文件；
-3. 安装 CLI，并准备同步 DataCore Skills。
+3. 安装 CLI，并把 Skills 同步到开放 Agent Skills 目录；
+4. 自动适配本机已有的 Claude Code、Codex、Continue、Trae 等 Agent。
+
+Skills 的统一来源是 `~/.agents/skills`。需要专属目录的 Agent 会使用指向统一来源的链接；Windows 或不支持符号链接的文件系统会自动回退为复制。升级自 v0.1—v0.3 时，原有 `~/.codex/skills` 内容会迁移；若检测到用户修改，安装程序会先备份再替换。
 
 ## 2. 初始化并检查
 
@@ -31,9 +34,27 @@ datacore setup
 datacore doctor
 datacore auth status
 datacore skills list
+datacore skills read datacore
 ```
 
 `datacore setup` 会同步 Skills，并在浏览器中打开 [DataCore 平台](https://datacore.dp.qifalab.cn/)授权页。密码、飞书和 Bohrium 登录最终都绑定到当前平台账号。
+
+### 使用标准 Skills 管理器
+
+CLI 已安装、但需要给另一种 Agent 单独同步 Skills 时，可以使用开放 Skills 管理器：
+
+```bash
+npx skills add https://datacore-cli.dp.cd.mba -g -y
+```
+
+它会从 DataCore 的标准发现地址读取 Skills，并适配其支持的 Agent。没有 Node.js 时不影响一键安装；DataCore 自带安装器仍会完成通用目录和已检测 Agent 的同步。
+
+未被自动识别的非通用 Agent，也可以明确指定：
+
+```bash
+datacore skills install --agent claude-code --force
+datacore skills install --agent '*' --force
+```
 
 ### 让 Agent 独立完成安装
 
@@ -61,7 +82,7 @@ datacore --json conductivity status '完整的 DataCore 电导页面 URL'
 
 ```bash
 curl -fsSL https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.sh \
-  | sh -s -- --version v0.3.0 --no-setup
+  | sh -s -- --version v0.4.0 --no-setup
 ```
 
 也可以从 [GitHub Releases](https://github.com/dptech-yb/datacore-cli/releases) 下载 wheel、校验和、SBOM 和 Sigstore bundle。
@@ -73,6 +94,6 @@ datacore update
 datacore uninstall --yes
 ```
 
-更新会同步 CLI 与 Skills。卸载会撤销当前设备授权，并清理 CLI 与 DataCore Skills。
+更新从官方 GitHub Release 下载 wheel，按同一 Release 的 `SHA256SUMS` 校验后安装，再同步 Skills；不依赖 PyPI。卸载会撤销当前设备授权，并清理 CLI 与 DataCore Skills。
 
 遇到安装或授权问题，请先查看[故障恢复](/troubleshooting/)；完整参数见[CLI 命令参考](/reference/commands/)。

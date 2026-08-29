@@ -3,13 +3,17 @@ from __future__ import annotations
 import io
 import json
 import os
+import shutil
+import subprocess
 from pathlib import Path
+from types import SimpleNamespace
 
+import httpx
 import pytest
 
 from datacore_cli import CommandEngine, credentials
 from datacore_cli.errors import DataCoreCliError, exit_code_for_error
-from datacore_cli.main import main
+from datacore_cli.main import _upgrade_from_release, main
 from datacore_cli.transport import DataCoreTransport
 
 
@@ -55,10 +59,201 @@ def test_skills_install_is_idempotent(monkeypatch, tmp_path: Path, capsys) -> No
     assert main(["--json", "skills", "install"]) == 0
     first = json.loads(capsys.readouterr().out)
     assert sorted(first["data"]["installed"]) == ["datacore", "datacore-conductivity"]
+    assert first["data"]["canonicalPath"] == str(tmp_path / ".agents" / "skills")
+    assert (tmp_path / ".agents" / "skills" / "datacore" / "SKILL.md").is_file()
 
     assert main(["--json", "skills", "install"]) == 0
     second = json.loads(capsys.readouterr().out)
     assert sorted(second["data"]["skipped"]) == ["datacore", "datacore-conductivity"]
+
+
+def test_skills_install_migrates_codex_and_adapts_detected_claude(
+    monkeypatch, tmp_path: Path, capsys
+) -> None:
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    legacy = tmp_path / ".codex" / "skills" / "datacore"
+    legacy.mkdir(parents=True)
+    (legacy / "SKILL.md").write_text("custom legacy skill\n", encoding="utf-8")
+    (tmp_path / ".claude").mkdir()
+
+    assert main(["--json", "skills", "install", "--force"]) == 0
+    result = json.loads(capsys.readouterr().out)
+    canonical = tmp_path / ".agents" / "skills"
+
+    assert (tmp_path / ".codex" / "skills" / "datacore").is_symlink()
+    assert (tmp_path / ".claude" / "skills" / "datacore").is_symlink()
+    assert (canonical / "datacore" / "SKILL.md").is_file()
+    assert result["data"]["backups"]
+    assert sorted(result["data"]["agents"]) == ["Claude Code", "Codex"]
+
+
+def test_skills_uninstall_removes_managed_paths(monkeypatch, tmp_path: Path, capsys) -> None:
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    (tmp_path / ".claude").mkdir()
+    assert main(["--json", "skills", "install", "--force"]) == 0
+    capsys.readouterr()
+
+    assert main(["--json", "skills", "uninstall", "--yes"]) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["command"] == "skills.uninstall"
+    assert not (tmp_path / ".agents" / "skills" / "datacore").exists()
+    assert not (tmp_path / ".claude" / "skills" / "datacore").exists()
+
+
+def test_skills_install_supports_explicit_agent_and_read(
+    monkeypatch, tmp_path: Path, capsys
+) -> None:
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+
+    assert main(["--json", "skills", "install", "--agent", "gemini-cli", "--force"]) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["data"]["agents"] == ["Gemini CLI"]
+    assert (tmp_path / ".gemini" / "skills" / "datacore").is_symlink()
+
+    assert main(["--json", "skills", "read", "datacore"]) == 0
+    skill = json.loads(capsys.readouterr().out)
+    assert skill["data"]["name"] == "datacore"
+    assert "DataCore" in skill["data"]["content"]
+
+
+def test_skills_uninstall_ignores_tampered_adapter_path(
+    monkeypatch, tmp_path: Path, capsys
+) -> None:
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    assert main(["--json", "skills", "install", "--agent", "codex", "--force"]) == 0
+    capsys.readouterr()
+
+    unrelated = tmp_path / "unrelated" / "datacore"
+    unrelated.mkdir(parents=True)
+    sentinel = unrelated / "keep.txt"
+    sentinel.write_text("do not delete\n", encoding="utf-8")
+    manifest_path = tmp_path / ".agents" / "datacore-skill-install.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["adapters"].append(
+        {
+            "agent": "codex",
+            "displayName": "Codex",
+            "path": str(unrelated),
+            "method": "copy",
+        }
+    )
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    assert main(["--json", "skills", "uninstall", "--yes"]) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert sentinel.read_text(encoding="utf-8") == "do not delete\n"
+    assert any("路径超出支持范围" in warning for warning in result["warnings"])
+
+
+@pytest.mark.skipif(os.name == "nt" or shutil.which("sh") is None, reason="requires POSIX sh")
+def test_unix_uninstaller_refuses_unmarked_directory(tmp_path: Path) -> None:
+    install_root = tmp_path / "not-datacore"
+    install_root.mkdir()
+    sentinel = install_root / "keep.txt"
+    sentinel.write_text("do not delete\n", encoding="utf-8")
+    home = tmp_path / "home"
+    home.mkdir()
+    bin_dir = home / "bin"
+    bin_dir.mkdir()
+    script = Path(__file__).resolve().parents[1] / "install.sh"
+    environment = {
+        **os.environ,
+        "HOME": str(home),
+        "DATACORE_INSTALL_ROOT": str(install_root),
+        "DATACORE_BIN_DIR": str(bin_dir),
+    }
+
+    completed = subprocess.run(
+        ["sh", str(script), "--uninstall"],
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert completed.returncode != 0
+    assert "not a DataCore CLI installation" in completed.stderr
+    assert sentinel.read_text(encoding="utf-8") == "do not delete\n"
+
+
+def test_update_downloads_verified_github_release(monkeypatch) -> None:
+    wheel_content = b"verified wheel"
+    wheel_digest = __import__("hashlib").sha256(wheel_content).hexdigest()
+    wheel_name = "datacore_cli-0.4.0-py3-none-any.whl"
+
+    class Response:
+        def __init__(self, url: str, *, content: bytes = b"", text: str = "") -> None:
+            self.url = httpx.URL(url)
+            self.content = content
+            self.text = text
+
+        def raise_for_status(self) -> None:
+            return None
+
+    class Client:
+        def __init__(self, **_kwargs) -> None:
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def get(self, url: str):
+            if url.endswith("SHA256SUMS"):
+                return Response(
+                    "https://github.com/dptech-yb/datacore-cli/releases/download/v0.4.0/SHA256SUMS",
+                    text=f"{wheel_digest}  {wheel_name}\n",
+                )
+            assert url.endswith(f"/v0.4.0/{wheel_name}")
+            return Response(url, content=wheel_content)
+
+    calls: list[list[str]] = []
+    monkeypatch.setattr("datacore_cli.main.httpx.Client", Client)
+    monkeypatch.setattr(
+        "datacore_cli.main.subprocess.run",
+        lambda command, check: calls.append(command) or SimpleNamespace(returncode=0),
+    )
+
+    result = _upgrade_from_release("")
+
+    assert result == {"version": "0.4.0", "tag": "v0.4.0", "asset": wheel_name}
+    assert calls and calls[0][-2] == "--upgrade"
+
+
+def test_update_rejects_release_with_wrong_checksum(monkeypatch) -> None:
+    wheel_name = "datacore_cli-0.4.0-py3-none-any.whl"
+
+    class Response:
+        def __init__(self, url: str, *, content: bytes = b"", text: str = "") -> None:
+            self.url = httpx.URL(url)
+            self.content = content
+            self.text = text
+
+        def raise_for_status(self) -> None:
+            return None
+
+    class Client:
+        def __init__(self, **_kwargs) -> None:
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def get(self, url: str):
+            if url.endswith("SHA256SUMS"):
+                return Response(url, text=f"{'0' * 64}  {wheel_name}\n")
+            return Response(url, content=b"replaced wheel")
+
+    monkeypatch.setattr("datacore_cli.main.httpx.Client", Client)
+
+    with pytest.raises(DataCoreCliError, match="SHA256") as caught:
+        _upgrade_from_release("0.4.0")
+    assert caught.value.code == "release_checksum_mismatch"
 
 
 def test_transport_reuses_one_request_id_for_a_command() -> None:

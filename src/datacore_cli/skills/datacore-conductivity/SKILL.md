@@ -1,9 +1,14 @@
 ---
 name: datacore-conductivity
 description: "Inspect and operate DataCore's conductivity Bayesian-optimization loop through the datacore CLI. Apply for conductivity round status, recommendations, UniLab exports, measured-result validation/upload, five-fold training, fold recovery, model comparison, stop/continue decisions, or opening the next round."
+metadata:
+  version: "0.4.0"
+  requires:
+    bins: ["datacore"]
+  cliHelp: "datacore conductivity --help"
 ---
 
-# Datacore Conductivity
+# DataCore Conductivity
 
 Accept the full DataCore conductivity page URL as the preferred target. It preserves experiment, chain, and round identity; a raw `round...` identifier is acceptable only for round-scoped actions.
 

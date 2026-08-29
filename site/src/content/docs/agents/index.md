@@ -32,10 +32,20 @@ Agent 只需要处理三个稳定界面：
 
 ## Skills 在哪里
 
-安装包会把 Skills 同步到本机支持的 Agent 目录。其他 Agent 也可以直接读取公开版本：
+安装包会把 Skills 的统一副本写入 `~/.agents/skills`，并为检测到的非通用 Agent 建立适配目录。它不是 Codex 专属能力；Claude Code、Cursor、Gemini CLI、Trae 以及其他兼容 Agent Skills 的工具可以使用同一份指令。
+
+支持标准 Skills 管理器的环境可以直接安装：
+
+```bash
+npx skills add https://datacore-cli.dp.cd.mba -g -y
+```
+
+也可以直接读取公开版本：
 
 - [DataCore 基础 Skill](/skills/datacore/SKILL.md)
 - [电导工作流 Skill](/skills/datacore-conductivity/SKILL.md)
+
+运行时若不方便访问文件系统，Agent 也可以使用 `datacore skills list` 发现能力，再用 `datacore skills read datacore` 或 `datacore skills read datacore-conductivity` 读取完整说明。这与飞书 CLI 的 Skill 发现/读取方式一致，但执行仍统一走 DataCore CLI。
 
 如果 Agent 不支持 Skill 发现机制，也可以读取 [llms.txt](/llms.txt)、[完整上下文](/llms-full.txt) 和 [commands.json](/commands.json)。
 

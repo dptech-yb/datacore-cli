@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.metadata
 import json
 import platform
-import shutil
+import re
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 import webbrowser
 from pathlib import Path
@@ -19,9 +21,11 @@ from .credentials import delete_token, load_token, save_token
 from .engine import CommandEngine
 from .errors import DataCoreCliError, exit_code_for_error
 from .platform import PlatformEngine
+from .skill_install import install_skills, skills_status, uninstall_skills
 from .transport import DataCoreTransport
 
 DEFAULT_BASE_URL = "https://datacore.dp.qifalab.cn"
+RELEASE_REPOSITORY = "dptech-yb/datacore-cli"
 STANDARD_SCOPES = [
     "platform:read",
     "projects:read",
@@ -81,29 +85,131 @@ def _skill_inventory() -> tuple[Path, list[str]]:
     return source_root, names
 
 
-def _install_skills(*, force: bool) -> dict[str, Any]:
+def _install_skills(
+    *, force: bool, requested_agents: list[str] | None = None, copy: bool = False
+) -> dict[str, Any]:
     source_root, names = _skill_inventory()
-    target_root = Path.home() / ".codex" / "skills"
-    installed: list[str] = []
-    skipped: list[str] = []
-    target_root.mkdir(parents=True, exist_ok=True)
-    for name in names:
-        target = target_root / name
-        if target.exists() and not force:
-            skipped.append(name)
-            continue
-        if target.exists():
-            shutil.rmtree(target)
-        shutil.copytree(source_root / name, target)
-        installed.append(name)
+    try:
+        data = install_skills(
+            source_root,
+            names,
+            package_version=_version(),
+            force=force,
+            requested_agents=requested_agents,
+            copy=copy,
+        )
+    except ValueError as exc:
+        raise DataCoreCliError(
+            str(exc),
+            code="invalid_agent",
+            action="使用 datacore skills install --help 查看支持的 Agent。",
+        ) from exc
+    warnings = data.pop("warnings")
     return {
         "ok": True,
         "command": "skills.install",
-        "summary": f"已安装 {len(installed)} 个 DataCore Skills",
-        "data": {"installed": installed, "skipped": skipped, "path": str(target_root)},
+        "summary": f"已同步 {len(names)} 个通用 DataCore Skills",
+        "data": data,
         "artifacts": [],
-        "warnings": ["已存在的 Skill 未覆盖；如需更新请使用 --force。"] if skipped else [],
+        "warnings": [
+            *warnings,
+            *(["已存在的 Skill 未覆盖；如需更新请使用 --force。"] if data["skipped"] else []),
+        ],
     }
+
+
+def _upgrade_from_release(target_version: str) -> dict[str, str]:
+    requested = target_version.strip().lstrip("v")
+    if requested and not re.fullmatch(r"\d+\.\d+\.\d+(?:[A-Za-z0-9._-]*)", requested):
+        raise DataCoreCliError(
+            f"版本号格式无效：{target_version}",
+            code="invalid_version",
+            action="使用类似 datacore update --version 0.4.0 的版本号。",
+        )
+
+    release_root = f"https://github.com/{RELEASE_REPOSITORY}/releases"
+    if requested:
+        tag = f"v{requested}"
+        asset_root = f"{release_root}/download/{tag}"
+    else:
+        tag = ""
+        asset_root = f"{release_root}/latest/download"
+
+    try:
+        with httpx.Client(
+            follow_redirects=True,
+            timeout=60.0,
+            headers={"User-Agent": f"datacore-cli/{_version()}"},
+        ) as client:
+            checksums = client.get(f"{asset_root}/SHA256SUMS")
+            checksums.raise_for_status()
+            if not requested:
+                match = re.search(r"/download/(v[^/]+)/SHA256SUMS$", checksums.url.path)
+                if match is None:
+                    raise DataCoreCliError(
+                        "无法识别最新 DataCore CLI 版本",
+                        code="release_version_missing",
+                        action="稍后重试，或使用 datacore update --version X.Y.Z。",
+                    )
+                tag = match.group(1)
+                requested = tag.removeprefix("v")
+                asset_root = f"{release_root}/download/{tag}"
+
+            wheel_name = f"datacore_cli-{requested}-py3-none-any.whl"
+            expected = ""
+            for line in checksums.text.splitlines():
+                parts = line.strip().split()
+                if len(parts) >= 2 and parts[-1].lstrip("*") == wheel_name:
+                    expected = parts[0].lower()
+                    break
+            if not re.fullmatch(r"[a-f0-9]{64}", expected):
+                raise DataCoreCliError(
+                    f"Release 校验清单中缺少 {wheel_name}",
+                    code="release_checksum_missing",
+                    action="不要跳过校验；请检查目标版本或稍后重试。",
+                )
+
+            wheel = client.get(f"{asset_root}/{wheel_name}")
+            wheel.raise_for_status()
+    except DataCoreCliError:
+        raise
+    except httpx.HTTPError as exc:
+        raise DataCoreCliError(
+            "下载 DataCore CLI Release 失败",
+            code="update_download_failed",
+            action="检查网络后重试，或重新运行官网的一键安装命令。",
+        ) from exc
+
+    actual = hashlib.sha256(wheel.content).hexdigest()
+    if actual != expected:
+        raise DataCoreCliError(
+            "DataCore CLI Release 的 SHA256 校验失败",
+            code="release_checksum_mismatch",
+            action="已拒绝安装；请稍后重试并确认网络中间设备未替换下载内容。",
+        )
+
+    with tempfile.TemporaryDirectory(prefix="datacore-cli-update-") as temporary:
+        wheel_path = Path(temporary) / wheel_name
+        wheel_path.write_bytes(wheel.content)
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                "--disable-pip-version-check",
+                "--upgrade",
+                str(wheel_path),
+            ],
+            check=False,
+        )
+    if completed.returncode != 0:
+        raise DataCoreCliError(
+            "CLI 升级失败",
+            code="update_failed",
+            action="检查 Python 环境后重试，或重新运行官网的一键安装命令。",
+        )
+    return {"version": requested, "tag": tag, "asset": wheel_name}
 
 
 def _auth_login(
@@ -295,9 +401,25 @@ def _parser() -> argparse.ArgumentParser:
 
     skills = sub.add_parser("skills", help="安装或查看 DataCore Skills")
     skills_sub = skills.add_subparsers(dest="skills_command", required=True)
-    install = skills_sub.add_parser("install", help="将内置 Skills 同步到本机")
+    install = skills_sub.add_parser("install", help="将内置 Skills 同步到通用 Agent 目录")
     install.add_argument("--force", action="store_true")
+    install.add_argument(
+        "--agent",
+        action="append",
+        default=[],
+        metavar="NAME",
+        help="为指定的非通用 Agent 添加适配目录；可重复，使用 * 表示全部",
+    )
+    install.add_argument(
+        "--copy",
+        action="store_true",
+        help="复制到 Agent 目录而非创建符号链接",
+    )
     skills_sub.add_parser("list", help="列出 CLI 自带的 Skills")
+    read_skill = skills_sub.add_parser("read", help="读取一个内置 Skill 的完整说明")
+    read_skill.add_argument("name", help="Skill 名称")
+    remove_skills = skills_sub.add_parser("uninstall", help="移除 DataCore Skills")
+    remove_skills.add_argument("--yes", action="store_true")
 
     sub.add_parser("quota", help="查看今日自动化额度")
     sub.add_parser("capabilities", help="查看平台开放能力目录")
@@ -432,29 +554,23 @@ def main(argv: list[str] | None = None) -> int:
     base_url = args.base_url.rstrip("/")
     try:
         if args.group == "update":
-            package = "datacore-cli"
-            if args.target_version:
-                package += f"=={args.target_version.lstrip('v')}"
-            completed = subprocess.run(
-                [sys.executable, "-m", "pip", "install", "--upgrade", package],
-                check=False,
-            )
-            if completed.returncode != 0:
-                raise DataCoreCliError(
-                    "CLI 升级失败",
-                    code="update_failed",
-                    action="检查网络和 Python 环境后重试，或重新运行官方安装脚本。",
-                )
-            subprocess.run(
+            release = _upgrade_from_release(args.target_version)
+            skill_update = subprocess.run(
                 [sys.executable, "-m", "datacore_cli", "skills", "install", "--force"],
                 check=False,
             )
+            if skill_update.returncode != 0:
+                raise DataCoreCliError(
+                    "CLI 已升级，但 Skills 同步失败",
+                    code="skill_update_failed",
+                    action="运行 datacore skills install --force；仍失败时运行 datacore doctor。",
+                )
             _print(
                 {
                     "ok": True,
                     "command": "update",
                     "summary": "DataCore CLI 与 Skills 已更新",
-                    "data": {"package": package},
+                    "data": release,
                     "artifacts": [],
                     "warnings": [],
                 },
@@ -471,10 +587,7 @@ def main(argv: list[str] | None = None) -> int:
                 )
             delete_token(base_url)
             _source_root, names = _skill_inventory()
-            for name in names:
-                target = Path.home() / ".codex" / "skills" / name
-                if target.exists():
-                    shutil.rmtree(target)
+            uninstall_skills(names)
             completed = subprocess.run(
                 [sys.executable, "-m", "pip", "uninstall", "-y", "datacore-cli"],
                 check=False,
@@ -484,16 +597,54 @@ def main(argv: list[str] | None = None) -> int:
         if args.group == "skills":
             _source_root, names = _skill_inventory()
             if args.skills_command == "list":
+                status = skills_status(names)
                 result = {
                     "ok": True,
                     "command": "skills.list",
                     "summary": f"内置 {len(names)} 个 DataCore Skills",
-                    "data": {"skills": names},
+                    "data": {"skills": names, "installation": status},
                     "artifacts": [],
                     "warnings": [],
                 }
+            elif args.skills_command == "read":
+                if args.name not in names:
+                    raise DataCoreCliError(
+                        f"未知 Skill：{args.name}",
+                        code="skill_not_found",
+                        action=f"可选值：{', '.join(names)}。",
+                    )
+                content = (_source_root / args.name / "SKILL.md").read_text(encoding="utf-8")
+                result = {
+                    "ok": True,
+                    "command": "skills.read",
+                    "summary": f"已读取 {args.name}",
+                    "data": {"name": args.name, "content": content},
+                    "artifacts": [],
+                    "warnings": [],
+                }
+            elif args.skills_command == "uninstall":
+                if not args.yes:
+                    raise DataCoreCliError(
+                        "移除 DataCore Skills 尚未确认",
+                        code="confirmation_required",
+                        action="确认后使用 datacore skills uninstall --yes。",
+                    )
+                data = uninstall_skills(names)
+                warnings = data.pop("warnings")
+                result = {
+                    "ok": True,
+                    "command": "skills.uninstall",
+                    "summary": "DataCore Skills 已移除",
+                    "data": data,
+                    "artifacts": [],
+                    "warnings": warnings,
+                }
             else:
-                result = _install_skills(force=args.force)
+                result = _install_skills(
+                    force=args.force,
+                    requested_agents=args.agent,
+                    copy=args.copy,
+                )
             _print(result, as_json=args.as_json)
             return 0
 
@@ -515,7 +666,7 @@ def main(argv: list[str] | None = None) -> int:
                             "summary": "DataCore CLI、Skills 与平台授权均已就绪",
                             "data": skills_result["data"],
                             "artifacts": [],
-                            "warnings": [],
+                            "warnings": skills_result["warnings"],
                         },
                         as_json=args.as_json,
                     )
@@ -537,16 +688,13 @@ def main(argv: list[str] | None = None) -> int:
 
         if args.group == "doctor":
             _source_root, names = _skill_inventory()
-            installed = [
-                name
-                for name in names
-                if (Path.home() / ".codex" / "skills" / name / "SKILL.md").is_file()
-            ]
+            skill_check = skills_status(names)
+            installed = skill_check["installed"]
             checks: dict[str, Any] = {
                 "version": _version(),
                 "python": platform.python_version(),
                 "platform": platform.platform(),
-                "skills": {"expected": names, "installed": installed},
+                "skills": skill_check,
                 "credential": "present" if load_token(base_url) else "missing",
             }
             token = load_token(base_url)

@@ -11,15 +11,30 @@ $InstallRoot = if ($env:DATACORE_INSTALL_ROOT) { $env:DATACORE_INSTALL_ROOT } el
 $VenvRoot = Join-Path $InstallRoot "venv"
 $ScriptsDir = Join-Path $VenvRoot "Scripts"
 $DataCoreExe = Join-Path $ScriptsDir "datacore.exe"
+$InstallMarker = Join-Path $InstallRoot ".datacore-cli-install"
 $env:PYTHONUTF8 = "1"
 
 if ($Uninstall) {
+    if (-not (Test-Path -LiteralPath $InstallRoot)) {
+        Write-Host "DataCore CLI is not installed."
+        exit 0
+    }
+    $TrimChars = [char[]]"\/"
+    $ResolvedRoot = (Resolve-Path -LiteralPath $InstallRoot).Path.TrimEnd($TrimChars)
+    $ResolvedHome = [System.IO.Path]::GetFullPath($HOME).TrimEnd($TrimChars)
+    $VolumeRoot = [System.IO.Path]::GetPathRoot($ResolvedRoot).TrimEnd($TrimChars)
+    if ($ResolvedRoot -eq $ResolvedHome -or $ResolvedRoot -eq $VolumeRoot) {
+        throw "Refusing uninstall from unsafe path: $ResolvedRoot"
+    }
+    if (-not (Test-Path -LiteralPath $InstallMarker) -and -not (Test-Path -LiteralPath $DataCoreExe)) {
+        throw "Refusing uninstall: $ResolvedRoot is not a DataCore CLI installation."
+    }
     if (Test-Path $DataCoreExe) {
         try { & $DataCoreExe auth logout | Out-Null } catch { }
+        try { & $DataCoreExe skills uninstall --yes | Out-Null }
+        catch { Write-Warning "DataCore Skills could not be removed automatically." }
     }
     Remove-Item -Recurse -Force $InstallRoot -ErrorAction SilentlyContinue
-    Remove-Item -Recurse -Force (Join-Path $HOME ".codex\skills\datacore") -ErrorAction SilentlyContinue
-    Remove-Item -Recurse -Force (Join-Path $HOME ".codex\skills\datacore-conductivity") -ErrorAction SilentlyContinue
     $parts = ([Environment]::GetEnvironmentVariable("Path", "User") -split ";") | Where-Object { $_ -and $_ -ne $ScriptsDir }
     [Environment]::SetEnvironmentVariable("Path", ($parts -join ";"), "User")
     Write-Host "DataCore CLI and DataCore Skills were removed."
@@ -67,6 +82,7 @@ try {
     }
     & (Join-Path $ScriptsDir "python.exe") -m pip install --disable-pip-version-check --upgrade (Join-Path $TempRoot $Wheel)
     if ($LASTEXITCODE -ne 0) { throw "pip installation failed." }
+    Set-Content -LiteralPath $InstallMarker -Value $PackageVersion -NoNewline
 
     $UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
     $PathParts = @($UserPath -split ";" | Where-Object { $_ })
@@ -77,12 +93,12 @@ try {
     }
     $env:Path = "$ScriptsDir;$env:Path"
 
-    & $DataCoreExe skills install --force
     Write-Host "Installed DataCore CLI $PackageVersion."
     if (-not $NoSetup) {
         if ($AllowFileCredential) { & $DataCoreExe setup --allow-file-credential }
         else { & $DataCoreExe setup }
     } else {
+        & $DataCoreExe skills install --force
         Write-Host "Run 'datacore setup' to authorize this device."
     }
 }
