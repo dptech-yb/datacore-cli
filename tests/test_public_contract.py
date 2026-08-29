@@ -182,13 +182,25 @@ def test_update_downloads_verified_github_release(monkeypatch) -> None:
     wheel_name = "datacore_cli-0.4.0-py3-none-any.whl"
 
     class Response:
-        def __init__(self, url: str, *, content: bytes = b"", text: str = "") -> None:
+        def __init__(
+            self,
+            url: str,
+            *,
+            content: bytes = b"",
+            text: str = "",
+            json_data: dict[str, str] | None = None,
+        ) -> None:
             self.url = httpx.URL(url)
             self.content = content
             self.text = text
+            self.json_data = json_data
 
         def raise_for_status(self) -> None:
             return None
+
+        def json(self) -> dict[str, str]:
+            assert self.json_data is not None
+            return self.json_data
 
     class Client:
         def __init__(self, **_kwargs) -> None:
@@ -201,9 +213,11 @@ def test_update_downloads_verified_github_release(monkeypatch) -> None:
             return False
 
         def get(self, url: str):
+            if url.endswith("/releases/latest"):
+                return Response(url, json_data={"tag_name": "v0.4.0"})
             if url.endswith("SHA256SUMS"):
                 return Response(
-                    "https://github.com/dptech-yb/datacore-cli/releases/download/v0.4.0/SHA256SUMS",
+                    "https://release-assets.githubusercontent.com/download/SHA256SUMS",
                     text=f"{wheel_digest}  {wheel_name}\n",
                 )
             assert url.endswith(f"/v0.4.0/{wheel_name}")

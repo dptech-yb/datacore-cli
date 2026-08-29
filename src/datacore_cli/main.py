@@ -141,19 +141,33 @@ def _upgrade_from_release(target_version: str) -> dict[str, str]:
             timeout=60.0,
             headers={"User-Agent": f"datacore-cli/{_version()}"},
         ) as client:
-            checksums = client.get(f"{asset_root}/SHA256SUMS")
-            checksums.raise_for_status()
             if not requested:
-                match = re.search(r"/download/(v[^/]+)/SHA256SUMS$", checksums.url.path)
-                if match is None:
+                release = client.get(
+                    f"https://api.github.com/repos/{RELEASE_REPOSITORY}/releases/latest"
+                )
+                release.raise_for_status()
+                try:
+                    latest_tag = release.json().get("tag_name")
+                except (AttributeError, ValueError) as exc:
+                    raise DataCoreCliError(
+                        "无法识别最新 DataCore CLI 版本",
+                        code="release_version_missing",
+                        action="稍后重试，或使用 datacore update --version X.Y.Z。",
+                    ) from exc
+                if not isinstance(latest_tag, str) or not re.fullmatch(
+                    r"v\d+\.\d+\.\d+(?:[A-Za-z0-9._-]*)", latest_tag
+                ):
                     raise DataCoreCliError(
                         "无法识别最新 DataCore CLI 版本",
                         code="release_version_missing",
                         action="稍后重试，或使用 datacore update --version X.Y.Z。",
                     )
-                tag = match.group(1)
+                tag = latest_tag
                 requested = tag.removeprefix("v")
                 asset_root = f"{release_root}/download/{tag}"
+
+            checksums = client.get(f"{asset_root}/SHA256SUMS")
+            checksums.raise_for_status()
 
             wheel_name = f"datacore_cli-{requested}-py3-none-any.whl"
             expected = ""
