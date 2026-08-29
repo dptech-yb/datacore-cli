@@ -53,7 +53,7 @@ description: 由当前 DataCore CLI 参数定义自动生成的命令与选项�
 
 ## `datacore uninstall`
 
-撤销授权并卸载 CLI 与 Skills
+从当前 Python 环境移除 CLI 包、授权与 Skills
 
 ### 选项
 

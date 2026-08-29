@@ -42,10 +42,10 @@ jobs:
       - run: python -m pip install build twine
       - run: python -m build
       - run: python -m twine check dist/*
-      - run: sh -n install.sh
+      - run: sh -n install.sh uninstall.sh
       - name: Test one-command installer against local release assets
         run: |
-          cp install.sh install.ps1 dist/
+          cp install.sh install.ps1 uninstall.sh uninstall.ps1 dist/
           (cd dist && sha256sum -- ./* | sed 's#  \./#  #' > SHA256SUMS)
           python -m http.server 8765 --directory dist >/tmp/datacore-http.log 2>&1 &
           server_pid=$!
@@ -59,8 +59,10 @@ jobs:
           "$test_home/bin/datacore" --version
           "$test_home/bin/datacore" skills list
           HOME="$test_home" DATACORE_INSTALL_ROOT="$test_home/app" DATACORE_BIN_DIR="$test_home/bin" \
-            sh install.sh --uninstall
+            sh "$test_home/app/uninstall.sh" --purge-backups
           test ! -e "$test_home/app"
+          test ! -e "$test_home/bin/datacore"
+          test ! -e "$test_home/.agents/datacore-skill-install.json"
 
   unix-installer:
     name: Installer / ${{ matrix.os }}
@@ -78,7 +80,7 @@ jobs:
         run: |
           python -m pip install build
           python -m build
-          cp install.sh install.ps1 dist/
+          cp install.sh install.ps1 uninstall.sh uninstall.ps1 dist/
           (cd dist && shasum -a 256 ./* | sed 's#  \./#  #' > SHA256SUMS)
       - name: Install from local release
         run: |
@@ -94,8 +96,10 @@ jobs:
           "$test_home/bin/datacore" --version
           "$test_home/bin/datacore" skills list
           HOME="$test_home" DATACORE_INSTALL_ROOT="$test_home/app" DATACORE_BIN_DIR="$test_home/bin" \
-            sh install.sh --uninstall
+            sh "$test_home/app/uninstall.sh" --purge-backups
           test ! -e "$test_home/app"
+          test ! -e "$test_home/bin/datacore"
+          test ! -e "$test_home/.agents/datacore-skill-install.json"
 
   windows-installer:
     runs-on: windows-latest
@@ -107,15 +111,19 @@ jobs:
       - name: Validate PowerShell syntax
         shell: pwsh
         run: |
-          $errors = $null
-          [System.Management.Automation.Language.Parser]::ParseFile("$PWD/install.ps1", [ref]$null, [ref]$errors) | Out-Null
-          if ($errors.Count -gt 0) { $errors | Format-List; exit 1 }
+          $allErrors = @()
+          foreach ($script in @("install.ps1", "uninstall.ps1")) {
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile("$PWD/$script", [ref]$null, [ref]$errors) | Out-Null
+            $allErrors += $errors
+          }
+          if ($allErrors.Count -gt 0) { $allErrors | Format-List; exit 1 }
       - name: Install from local release
         shell: pwsh
         run: |
           python -m pip install build
           python -m build
-          Copy-Item install.sh, install.ps1 dist/
+          Copy-Item install.sh, install.ps1, uninstall.sh, uninstall.ps1 dist/
           Get-ChildItem dist -File | ForEach-Object {
             $hash = (Get-FileHash -Algorithm SHA256 $_.FullName).Hash.ToLowerInvariant()
             "$hash  $($_.Name)"
@@ -130,8 +138,10 @@ jobs:
             & ./install.ps1 -Version "v$packageVersion" -NoSetup
             & (Join-Path $env:DATACORE_INSTALL_ROOT "venv\Scripts\datacore.exe") --version
             & (Join-Path $env:DATACORE_INSTALL_ROOT "venv\Scripts\datacore.exe") skills list
-            & ./install.ps1 -Uninstall
+            if (-not (Test-Path (Join-Path $env:DATACORE_INSTALL_ROOT "uninstall.ps1"))) { throw "Installed uninstaller is missing." }
+            & ./uninstall.ps1 -PurgeBackups
             if (Test-Path $env:DATACORE_INSTALL_ROOT) { throw "Uninstall left the install root behind." }
+            if (Test-Path (Join-Path $HOME ".agents\datacore-skill-install.json")) { throw "Uninstall left the Skills manifest behind." }
           }
           finally {
             Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue

@@ -40,7 +40,7 @@ jobs:
           python -m twine check dist/*
       - name: Create SBOM and checksums
         run: |
-          cp install.sh install.ps1 dist/
+          cp install.sh install.ps1 uninstall.sh uninstall.ps1 dist/
           python -m venv .sbom-venv
           .sbom-venv/bin/python -m pip install --disable-pip-version-check dist/*.whl
           cyclonedx-py environment .sbom-venv/bin/python \

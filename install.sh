@@ -10,7 +10,7 @@ ALLOW_FILE_CREDENTIAL=0
 UNINSTALL=0
 
 usage() {
-  printf '%s\n' "Usage: install.sh [--version v0.4.2] [--no-setup] [--allow-file-credential] [--uninstall]"
+  printf '%s\n' "Usage: install.sh [--version v0.4.3] [--no-setup] [--allow-file-credential] [--uninstall]"
 }
 
 while [ "$#" -gt 0 ]; do
@@ -29,8 +29,10 @@ while [ "$#" -gt 0 ]; do
 done
 
 if [ "$UNINSTALL" -eq 1 ]; then
+  if [ -f "$INSTALL_ROOT/uninstall.sh" ]; then
+    exec sh "$INSTALL_ROOT/uninstall.sh"
+  fi
   if [ ! -e "$INSTALL_ROOT" ]; then
-    [ ! -L "$BIN_DIR/datacore" ] || rm -f "$BIN_DIR/datacore"
     printf '%s\n' "DataCore CLI is not installed."
     exit 0
   fi
@@ -92,6 +94,7 @@ esac
 [ -n "$PACKAGE_VERSION" ] || { printf '%s\n' "Unable to resolve release version." >&2; exit 1; }
 
 WHEEL="datacore_cli-${PACKAGE_VERSION}-py3-none-any.whl"
+UNINSTALLER="uninstall.sh"
 BASE="${DATACORE_RELEASE_BASE:-https://github.com/$REPO/releases/download/$VERSION}"
 TMP="$(mktemp -d 2>/dev/null || mktemp -d -t datacore-cli)"
 trap 'rm -rf "$TMP"' EXIT HUP INT TERM
@@ -99,6 +102,7 @@ trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 printf 'Downloading DataCore CLI %s...\n' "$VERSION"
 curl -fL --retry 3 --retry-connrefused --retry-delay 1 -o "$TMP/$WHEEL" "$BASE/$WHEEL"
 curl -fL --retry 3 --retry-connrefused --retry-delay 1 -o "$TMP/SHA256SUMS" "$BASE/SHA256SUMS"
+curl -fL --retry 3 --retry-connrefused --retry-delay 1 -o "$TMP/$UNINSTALLER" "$BASE/$UNINSTALLER"
 
 EXPECTED="$(awk -v file="$WHEEL" '$2 == file || $2 == "*" file {print $1}' "$TMP/SHA256SUMS" | head -n 1)"
 [ -n "$EXPECTED" ] || { printf '%s\n' "Release checksum entry is missing." >&2; exit 1; }
@@ -110,26 +114,40 @@ else
 fi
 [ "$ACTUAL" = "$EXPECTED" ] || { printf '%s\n' "SHA256 verification failed; refusing installation." >&2; exit 1; }
 
+UNINSTALLER_EXPECTED="$(awk -v file="$UNINSTALLER" '$2 == file || $2 == "*" file {print $1}' "$TMP/SHA256SUMS" | head -n 1)"
+[ -n "$UNINSTALLER_EXPECTED" ] || { printf '%s\n' "Uninstaller checksum entry is missing." >&2; exit 1; }
+if command -v sha256sum >/dev/null 2>&1; then
+  UNINSTALLER_ACTUAL="$(sha256sum "$TMP/$UNINSTALLER" | awk '{print $1}')"
+else
+  UNINSTALLER_ACTUAL="$(shasum -a 256 "$TMP/$UNINSTALLER" | awk '{print $1}')"
+fi
+[ "$UNINSTALLER_ACTUAL" = "$UNINSTALLER_EXPECTED" ] || { printf '%s\n' "Uninstaller SHA256 verification failed; refusing installation." >&2; exit 1; }
+
 mkdir -p "$INSTALL_ROOT" "$BIN_DIR"
 if [ ! -x "$INSTALL_ROOT/venv/bin/python" ]; then
   "$PYTHON" -m venv "$INSTALL_ROOT/venv"
 fi
 "$INSTALL_ROOT/venv/bin/python" -m pip install --disable-pip-version-check --upgrade "$TMP/$WHEEL"
 printf '%s\n' "$PACKAGE_VERSION" > "$INSTALL_ROOT/.datacore-cli-install"
+cp "$TMP/$UNINSTALLER" "$INSTALL_ROOT/uninstall.sh"
+chmod 755 "$INSTALL_ROOT/uninstall.sh"
 ln -sf "$INSTALL_ROOT/venv/bin/datacore" "$BIN_DIR/datacore"
 
 case ":$PATH:" in
   *":$BIN_DIR:"*) ;;
   *)
-    PROFILE="$HOME/.profile"
-    [ "${SHELL:-}" = "/bin/zsh" ] && PROFILE="$HOME/.zprofile"
-    # shellcheck disable=SC2016 # Persist a literal expression for future shells.
-    LINE='export PATH="$HOME/.local/bin:$PATH"'
-    if [ ! -f "$PROFILE" ] || ! grep -F "$LINE" "$PROFILE" >/dev/null 2>&1; then
-      printf '\n%s\n' "$LINE" >> "$PROFILE"
+    if [ "$BIN_DIR" = "$HOME/.local/bin" ]; then
+      PROFILE="$HOME/.profile"
+      [ "${SHELL:-}" = "/bin/zsh" ] && PROFILE="$HOME/.zprofile"
+      # shellcheck disable=SC2016 # Persist a literal expression for future shells.
+      LINE='export PATH="$HOME/.local/bin:$PATH"'
+      if [ ! -f "$PROFILE" ] || ! grep -F "$LINE" "$PROFILE" >/dev/null 2>&1; then
+        printf '\n%s\n' "$LINE" >> "$PROFILE"
+        printf '%s\n' "$PROFILE" > "$INSTALL_ROOT/.datacore-cli-profile"
+      fi
     fi
     export PATH="$BIN_DIR:$PATH"
-    printf 'Added %s to PATH in %s.\n' "$BIN_DIR" "$PROFILE"
+    printf 'Added %s to PATH for this installation session.\n' "$BIN_DIR"
     ;;
 esac
 

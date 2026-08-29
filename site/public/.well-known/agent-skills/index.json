@@ -6,14 +6,14 @@
       "type": "archive",
       "description": "Use DataCore platform capabilities through the datacore CLI. Apply when a user asks to inspect or operate DataCore projects, experiments, conductivity optimization, reports, tools, reservations, reagents, or other DataCore resources. The CLI always acts as the signed-in DataCore user and preserves platform permissions.",
       "url": "datacore.zip",
-      "digest": "sha256:1e5cdbc9ff0e201b08f706a0b12582da05323107fddd4255b2e45b2a503feb89"
+      "digest": "sha256:52a86249031b106892a7a50547e1c265825da64ece311fa248204124abfcd181"
     },
     {
       "name": "datacore-conductivity",
       "type": "archive",
       "description": "Inspect and operate DataCore's conductivity Bayesian-optimization loop through the datacore CLI. Apply for conductivity round status, recommendations, UniLab exports, measured-result validation/upload, five-fold training, fold recovery, model comparison, stop/continue decisions, or opening the next round.",
       "url": "datacore-conductivity.zip",
-      "digest": "sha256:6ff306dd7966588722615ecbfc74d173a8f0f84c8e67e144fff9b8f5ab89e961"
+      "digest": "sha256:fc13ca28685fa0df3ce20a09d58b50918f987da619b3bf582cc9023943e5459c"
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1",
   "cli": "datacore",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "generatedFrom": "src/datacore_cli/main.py",
   "commands": [
     {
@@ -220,7 +220,7 @@
     },
     {
       "command": "datacore uninstall",
-      "summary": "撤销授权并卸载 CLI 与 Skills",
+      "summary": "从当前 Python 环境移除 CLI 包、授权与 Skills",
       "arguments": [
         {
           "name": "base_url",

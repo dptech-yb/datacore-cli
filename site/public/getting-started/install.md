@@ -82,7 +82,7 @@ datacore --json conductivity status '完整的 DataCore 电导页面 URL'
 
 ```bash
 curl -fsSL https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.sh \
-  | sh -s -- --version v0.4.2 --no-setup
+  | sh -s -- --version v0.4.3 --no-setup
 ```
 
 也可以从 [GitHub Releases](https://github.com/dptech-yb/datacore-cli/releases) 下载 wheel、校验和、SBOM 和 Sigstore bundle。
@@ -91,9 +91,22 @@ curl -fsSL https://github.com/dptech-yb/datacore-cli/releases/latest/download/in
 
 ```bash
 datacore update
-datacore uninstall --yes
+curl -fsSL https://github.com/dptech-yb/datacore-cli/releases/latest/download/uninstall.sh | sh
 ```
 
-更新从官方 GitHub Release 下载 wheel，按同一 Release 的 `SHA256SUMS` 校验后安装，再同步 Skills；不依赖 PyPI。卸载会撤销当前设备授权，并清理 CLI 与 DataCore Skills。
+Windows PowerShell：
+
+```powershell
+irm https://github.com/dptech-yb/datacore-cli/releases/latest/download/uninstall.ps1 | iex
+```
+
+更新从官方 GitHub Release 下载 wheel，按同一 Release 的 `SHA256SUMS` 校验后安装，再同步 Skills；不依赖 PyPI。独立卸载脚本会撤销当前设备授权，并清理受管 CLI、启动器、Skills 和 Agent 适配链接。用户改过的 Skill 安全备份默认保留；需要彻底删除时，macOS/Linux 执行：
+
+```bash
+curl -fsSL https://github.com/dptech-yb/datacore-cli/releases/latest/download/uninstall.sh \
+  | sh -s -- --purge-backups
+```
+
+Windows 下载 `uninstall.ps1` 后使用 `-PurgeBackups`。直接用 pip/wheel 安装的用户也可以运行 `datacore uninstall --yes`；一键安装用户应使用独立脚本，以便同时清理专用 venv 和启动器。
 
 遇到安装或授权问题，请先查看[故障恢复](/troubleshooting/)；完整参数见[CLI 命令参考](/reference/commands/)。

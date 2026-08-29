@@ -25,7 +25,7 @@ irm https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.p
 需要固定版本或不执行引导时，也可以直接安装 GitHub Release 中的 wheel：
 
 ```bash
-python -m pip install https://github.com/dptech-yb/datacore-cli/releases/download/v0.4.2/datacore_cli-0.4.2-py3-none-any.whl
+python -m pip install https://github.com/dptech-yb/datacore-cli/releases/download/v0.4.3/datacore_cli-0.4.3-py3-none-any.whl
 datacore setup
 ```
 
@@ -113,10 +113,16 @@ datacore --json conductivity status round28002
 
 ```bash
 datacore update
-datacore uninstall --yes
+curl -fsSL https://github.com/dptech-yb/datacore-cli/releases/latest/download/uninstall.sh | sh
 ```
 
-`datacore update` 从官方 GitHub Release 下载 wheel，按同一 Release 的 `SHA256SUMS` 校验后安装，再同步 Skills；不依赖 PyPI。也可以重新运行对应平台的安装脚本。重复安装是幂等的，并会同步最新 Skills。非通用 Agent 没有被自动识别时，可运行 `datacore skills install --agent NAME --force`；使用 `--agent '*'` 可为所有内置适配目标安装。`datacore skills read NAME` 可直接向 Agent 返回完整 Skill 内容，无需猜测本机目录。
+Windows PowerShell：
+
+```powershell
+irm https://github.com/dptech-yb/datacore-cli/releases/latest/download/uninstall.ps1 | iex
+```
+
+`datacore update` 从官方 GitHub Release 下载 wheel，按同一 Release 的 `SHA256SUMS` 校验后安装，再同步 Skills；不依赖 PyPI。独立卸载脚本会撤销当前设备授权，并清理受管 CLI、启动器、Skills 和 Agent 适配链接；用户改过的 Skill 安全备份默认保留，明确需要一并删除时可执行 `curl -fsSL https://github.com/dptech-yb/datacore-cli/releases/latest/download/uninstall.sh | sh -s -- --purge-backups`，Windows 下载脚本后传入 `-PurgeBackups`。直接用 pip/wheel 安装的用户也可以运行 `datacore uninstall --yes`，但一键安装用户应使用独立脚本，以便同时清理专用 venv 和启动器。重复安装是幂等的，并会同步最新 Skills。非通用 Agent 没有被自动识别时，可运行 `datacore skills install --agent NAME --force`；使用 `--agent '*'` 可为所有内置适配目标安装。`datacore skills read NAME` 可直接向 Agent 返回完整 Skill 内容，无需猜测本机目录。
 
 ## 发布可信度
 

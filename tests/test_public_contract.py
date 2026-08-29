@@ -155,16 +155,17 @@ def test_unix_uninstaller_refuses_unmarked_directory(tmp_path: Path) -> None:
     home.mkdir()
     bin_dir = home / "bin"
     bin_dir.mkdir()
-    script = Path(__file__).resolve().parents[1] / "install.sh"
+    script = Path(__file__).resolve().parents[1] / "uninstall.sh"
     environment = {
         **os.environ,
         "HOME": str(home),
+        "PATH": "/usr/bin:/bin",
         "DATACORE_INSTALL_ROOT": str(install_root),
         "DATACORE_BIN_DIR": str(bin_dir),
     }
 
     completed = subprocess.run(
-        ["sh", str(script), "--uninstall"],
+        ["sh", str(script)],
         env=environment,
         capture_output=True,
         text=True,
@@ -174,6 +175,90 @@ def test_unix_uninstaller_refuses_unmarked_directory(tmp_path: Path) -> None:
     assert completed.returncode != 0
     assert "not a DataCore CLI installation" in completed.stderr
     assert sentinel.read_text(encoding="utf-8") == "do not delete\n"
+
+
+@pytest.mark.skipif(os.name == "nt" or shutil.which("sh") is None, reason="requires POSIX sh")
+def test_standalone_uninstaller_removes_only_managed_install(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    install_root = home / ".local" / "share" / "datacore-cli"
+    cli = install_root / "venv" / "bin" / "datacore"
+    cli.parent.mkdir(parents=True)
+    cli.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    cli.chmod(0o755)
+    (install_root / ".datacore-cli-install").write_text("0.4.3\n", encoding="utf-8")
+
+    bin_dir = home / ".local" / "bin"
+    bin_dir.mkdir(parents=True)
+    launcher = bin_dir / "datacore"
+    launcher.symlink_to(cli)
+
+    profile = home / ".zprofile"
+    profile.write_text(
+        'export KEEP_ME="yes"\nexport PATH="$HOME/.local/bin:$PATH"\n',
+        encoding="utf-8",
+    )
+    (install_root / ".datacore-cli-profile").write_text(f"{profile}\n", encoding="utf-8")
+
+    backup = home / ".agents" / "datacore-skill-backups" / "old" / "SKILL.md"
+    backup.parent.mkdir(parents=True)
+    backup.write_text("backup\n", encoding="utf-8")
+    script = Path(__file__).resolve().parents[1] / "uninstall.sh"
+    environment = {
+        **os.environ,
+        "HOME": str(home),
+        "PATH": "/usr/bin:/bin",
+        "SHELL": "/bin/zsh",
+        "DATACORE_INSTALL_ROOT": str(install_root),
+        "DATACORE_BIN_DIR": str(bin_dir),
+    }
+
+    completed = subprocess.run(
+        ["sh", str(script), "--purge-backups"],
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert not install_root.exists()
+    assert not launcher.exists()
+    assert not (home / ".agents" / "datacore-skill-backups").exists()
+    assert profile.read_text(encoding="utf-8") == 'export KEEP_ME="yes"\n'
+    assert "Remote session revocation" not in completed.stderr
+
+
+@pytest.mark.skipif(os.name == "nt" or shutil.which("sh") is None, reason="requires POSIX sh")
+def test_standalone_uninstaller_keeps_unrelated_launcher(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    bin_dir = home / "bin"
+    bin_dir.mkdir()
+    unrelated = home / "unrelated-datacore"
+    unrelated.write_text("keep\n", encoding="utf-8")
+    launcher = bin_dir / "datacore"
+    launcher.symlink_to(unrelated)
+    script = Path(__file__).resolve().parents[1] / "uninstall.sh"
+    environment = {
+        **os.environ,
+        "HOME": str(home),
+        "PATH": "/usr/bin:/bin",
+        "DATACORE_INSTALL_ROOT": str(home / "missing-install"),
+        "DATACORE_BIN_DIR": str(bin_dir),
+    }
+
+    completed = subprocess.run(
+        ["sh", str(script)],
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert completed.returncode == 0
+    assert launcher.is_symlink()
+    assert unrelated.read_text(encoding="utf-8") == "keep\n"
+    assert "kept unrelated launcher" in completed.stderr
 
 
 def test_update_downloads_verified_github_release(monkeypatch) -> None:

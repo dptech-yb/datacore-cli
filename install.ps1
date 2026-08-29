@@ -12,9 +12,15 @@ $VenvRoot = Join-Path $InstallRoot "venv"
 $ScriptsDir = Join-Path $VenvRoot "Scripts"
 $DataCoreExe = Join-Path $ScriptsDir "datacore.exe"
 $InstallMarker = Join-Path $InstallRoot ".datacore-cli-install"
+$Uninstaller = Join-Path $InstallRoot "uninstall.ps1"
 $env:PYTHONUTF8 = "1"
 
 if ($Uninstall) {
+    $CurrentScript = $MyInvocation.MyCommand.Path
+    if ((Test-Path -LiteralPath $Uninstaller) -and (-not $CurrentScript -or (Resolve-Path -LiteralPath $CurrentScript).Path -ne (Resolve-Path -LiteralPath $Uninstaller).Path)) {
+        & $Uninstaller
+        exit $LASTEXITCODE
+    }
     if (-not (Test-Path -LiteralPath $InstallRoot)) {
         Write-Host "DataCore CLI is not installed."
         exit 0
@@ -62,6 +68,7 @@ if (-not $Version -or $Version -eq "latest") {
 if (-not $Version.StartsWith("v")) { $Version = "v$Version" }
 $PackageVersion = $Version.Substring(1)
 $Wheel = "datacore_cli-$PackageVersion-py3-none-any.whl"
+$UninstallerName = "uninstall.ps1"
 $Base = if ($env:DATACORE_RELEASE_BASE) { $env:DATACORE_RELEASE_BASE } else { "https://github.com/$Repo/releases/download/$Version" }
 $TempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("datacore-cli-" + [guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $TempRoot | Out-Null
@@ -70,11 +77,18 @@ try {
     Write-Host "Downloading DataCore CLI $Version..."
     Invoke-WebRequest -Uri "$Base/$Wheel" -OutFile (Join-Path $TempRoot $Wheel)
     Invoke-WebRequest -Uri "$Base/SHA256SUMS" -OutFile (Join-Path $TempRoot "SHA256SUMS")
+    Invoke-WebRequest -Uri "$Base/$UninstallerName" -OutFile (Join-Path $TempRoot $UninstallerName)
     $checksumLine = Get-Content (Join-Path $TempRoot "SHA256SUMS") | Where-Object { $_ -match "\s\*?$([regex]::Escape($Wheel))$" } | Select-Object -First 1
     if (-not $checksumLine) { throw "Release checksum entry is missing." }
     $Expected = ($checksumLine -split "\s+")[0].ToLowerInvariant()
     $Actual = (Get-FileHash -Algorithm SHA256 (Join-Path $TempRoot $Wheel)).Hash.ToLowerInvariant()
     if ($Actual -ne $Expected) { throw "SHA256 verification failed; refusing installation." }
+
+    $uninstallerChecksumLine = Get-Content (Join-Path $TempRoot "SHA256SUMS") | Where-Object { $_ -match "\s\*?$([regex]::Escape($UninstallerName))$" } | Select-Object -First 1
+    if (-not $uninstallerChecksumLine) { throw "Uninstaller checksum entry is missing." }
+    $UninstallerExpected = ($uninstallerChecksumLine -split "\s+")[0].ToLowerInvariant()
+    $UninstallerActual = (Get-FileHash -Algorithm SHA256 (Join-Path $TempRoot $UninstallerName)).Hash.ToLowerInvariant()
+    if ($UninstallerActual -ne $UninstallerExpected) { throw "Uninstaller SHA256 verification failed; refusing installation." }
 
     New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
     if (-not (Test-Path (Join-Path $ScriptsDir "python.exe"))) {
@@ -83,6 +97,7 @@ try {
     & (Join-Path $ScriptsDir "python.exe") -m pip install --disable-pip-version-check --upgrade (Join-Path $TempRoot $Wheel)
     if ($LASTEXITCODE -ne 0) { throw "pip installation failed." }
     Set-Content -LiteralPath $InstallMarker -Value $PackageVersion -NoNewline
+    Copy-Item -Force (Join-Path $TempRoot $UninstallerName) $Uninstaller
 
     $UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
     $PathParts = @($UserPath -split ";" | Where-Object { $_ })

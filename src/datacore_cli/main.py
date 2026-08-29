@@ -399,7 +399,7 @@ def _parser() -> argparse.ArgumentParser:
     update = sub.add_parser("update", help="升级 CLI 并同步 Skills")
     update.add_argument("--version", dest="target_version", default="")
 
-    uninstall = sub.add_parser("uninstall", help="撤销授权并卸载 CLI 与 Skills")
+    uninstall = sub.add_parser("uninstall", help="从当前 Python 环境移除 CLI 包、授权与 Skills")
     uninstall.add_argument("--yes", action="store_true")
 
     auth = sub.add_parser("auth", help="平台登录授权")
