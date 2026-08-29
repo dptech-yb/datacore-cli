@@ -251,9 +251,7 @@ def _auth_login_with_install_token(
         "data": {"baseUrl": base_url, "storage": storage},
         "artifacts": [],
         "warnings": (
-            []
-            if storage == "keychain"
-            else ["凭据已按明确选择保存到权限为 0600 的本地配置文件。"]
+            [] if storage == "keychain" else ["凭据已按明确选择保存到权限为 0600 的本地配置文件。"]
         ),
     }
     _print(result, as_json=as_json)

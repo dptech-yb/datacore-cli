@@ -69,9 +69,7 @@ def test_transport_reuses_one_request_id_for_a_command() -> None:
     assert first == second
 
 
-def test_agent_install_token_is_read_from_stdin_and_never_printed(
-    monkeypatch, capsys
-) -> None:
+def test_agent_install_token_is_read_from_stdin_and_never_printed(monkeypatch, capsys) -> None:
     install_token = "dc_install_short_lived_secret"
     formal_token = "dc_cli_long_lived_secret"
     saved: dict[str, str] = {}
@@ -105,8 +103,7 @@ def test_agent_install_token_is_read_from_stdin_and_never_printed(
     monkeypatch.setattr(
         "datacore_cli.main.save_token",
         lambda base_url, token, allow_file=False: (
-            saved.update(base_url=base_url, token=token, allow_file=str(allow_file))
-            or "keychain"
+            saved.update(base_url=base_url, token=token, allow_file=str(allow_file)) or "keychain"
         ),
     )
     assert main(["--json", "auth", "login", "--install-token-stdin"]) == 0
@@ -117,9 +114,7 @@ def test_agent_install_token_is_read_from_stdin_and_never_printed(
     assert json.loads(output)["data"]["storage"] == "keychain"
 
 
-def test_failed_agent_credential_storage_revokes_new_authorization(
-    monkeypatch, capsys
-) -> None:
+def test_failed_agent_credential_storage_revokes_new_authorization(monkeypatch, capsys) -> None:
     formal_token = "dc_cli_must_be_revoked"
     revoked: list[str] = []
 
@@ -147,9 +142,7 @@ def test_failed_agent_credential_storage_revokes_new_authorization(
             return Response()
 
     monkeypatch.setattr("datacore_cli.main.httpx.Client", Client)
-    monkeypatch.setattr(
-        "datacore_cli.main.sys.stdin", io.StringIO("dc_install_one_time\n")
-    )
+    monkeypatch.setattr("datacore_cli.main.sys.stdin", io.StringIO("dc_install_one_time\n"))
     monkeypatch.setattr(
         "datacore_cli.main.save_token",
         lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("no keyring")),
