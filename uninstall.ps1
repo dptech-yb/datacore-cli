@@ -11,6 +11,12 @@ $PythonExe = Join-Path $ScriptsDir "python.exe"
 $DataCoreExe = Join-Path $ScriptsDir "datacore.exe"
 $InstallMarker = Join-Path $InstallRoot ".datacore-cli-install"
 $SkillsRoot = if ($env:DATACORE_SKILLS_DIR) { $env:DATACORE_SKILLS_DIR } else { Join-Path $HOME ".agents\skills" }
+$BaseUrl = if ($env:DATACORE_BASE_URL) { $env:DATACORE_BASE_URL.TrimEnd("/") } else { "https://datacore.dp.qifalab.cn" }
+$LogoutTimeoutMilliseconds = 15000
+$CandidateTimeout = 0
+if ($env:DATACORE_LOGOUT_TIMEOUT_SECONDS -and [int]::TryParse($env:DATACORE_LOGOUT_TIMEOUT_SECONDS, [ref]$CandidateTimeout)) {
+    if ($CandidateTimeout -gt 0) { $LogoutTimeoutMilliseconds = $CandidateTimeout * 1000 }
+}
 $env:PYTHONUTF8 = "1"
 
 $ResolvedRoot = $null
@@ -32,16 +38,23 @@ $RemoteRevocationWarning = $false
 
 if ($Cli) {
     if (-not $KeepAuthorization) {
-        $HasAuthorization = $false
-        if (Test-Path -LiteralPath $PythonExe) {
-            & $PythonExe -c "from datacore_cli.credentials import load_token; from datacore_cli.main import DEFAULT_BASE_URL; raise SystemExit(0 if load_token(DEFAULT_BASE_URL) else 1)" 2>$null
-            $HasAuthorization = $LASTEXITCODE -eq 0
-        }
-        if ($HasAuthorization) {
-            try {
-                & $Cli auth logout | Out-Null
-                if ($LASTEXITCODE -ne 0) { $RemoteRevocationWarning = $true }
-            } catch { $RemoteRevocationWarning = $true }
+        $LogoutStdout = [System.IO.Path]::GetTempFileName()
+        $LogoutStderr = [System.IO.Path]::GetTempFileName()
+        try {
+            $LogoutProcess = Start-Process -FilePath $Cli -ArgumentList @("--base-url", $BaseUrl, "--json", "auth", "logout") -NoNewWindow -PassThru -RedirectStandardOutput $LogoutStdout -RedirectStandardError $LogoutStderr
+            if (-not $LogoutProcess.WaitForExit($LogoutTimeoutMilliseconds)) {
+                Stop-Process -Id $LogoutProcess.Id -Force -ErrorAction SilentlyContinue
+                $RemoteRevocationWarning = $true
+            } elseif ($LogoutProcess.ExitCode -ne 0) {
+                $LogoutMessage = (Get-Content -Raw -LiteralPath $LogoutStdout -ErrorAction SilentlyContinue) + (Get-Content -Raw -LiteralPath $LogoutStderr -ErrorAction SilentlyContinue)
+                if ($LogoutMessage -notmatch '"code"\s*:\s*"authentication_required"') {
+                    $RemoteRevocationWarning = $true
+                }
+            }
+        } catch {
+            $RemoteRevocationWarning = $true
+        } finally {
+            Remove-Item -Force -LiteralPath $LogoutStdout, $LogoutStderr -ErrorAction SilentlyContinue
         }
         try {
             & $Cli skills uninstall --yes | Out-Null
@@ -63,14 +76,20 @@ if (-not $KeepAuthorization) {
     if (Test-Path -LiteralPath $CredentialFile) {
         try {
             $CredentialValue = Get-Content -Raw -LiteralPath $CredentialFile | ConvertFrom-Json
+            $CredentialValue.PSObject.Properties.Remove($BaseUrl)
             if (@($CredentialValue.PSObject.Properties).Count -eq 0) {
                 Remove-Item -Force -LiteralPath $CredentialFile
                 $CredentialParent = Split-Path -Parent $CredentialFile
                 if (@(Get-ChildItem -Force -LiteralPath $CredentialParent -ErrorAction SilentlyContinue).Count -eq 0) {
                     Remove-Item -Force -LiteralPath $CredentialParent
                 }
+            } else {
+                $CredentialValue | ConvertTo-Json | Set-Content -Encoding utf8 -LiteralPath $CredentialFile
             }
         } catch { }
+    }
+    if ($RemoteRevocationWarning -and $env:OS -eq "Windows_NT" -and (Get-Command cmdkey.exe -ErrorAction SilentlyContinue)) {
+        & cmdkey.exe "/delete:datacore-cli" 2>$null | Out-Null
     }
 }
 

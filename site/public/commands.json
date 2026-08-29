@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1",
   "cli": "datacore",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "generatedFrom": "src/datacore_cli/main.py",
   "commands": [
     {

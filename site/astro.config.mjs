@@ -67,7 +67,7 @@ export default defineConfig({
 						name: 'DataCore CLI',
 						applicationCategory: 'DeveloperApplication',
 						operatingSystem: 'Windows, macOS, Linux',
-						softwareVersion: '0.4.3',
+						softwareVersion: '0.4.4',
 						url: 'https://datacore-cli.dp.cd.mba/',
 						codeRepository: 'https://github.com/dptech-yb/datacore-cli',
 					}),

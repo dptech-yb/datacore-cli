@@ -183,9 +183,19 @@ def test_standalone_uninstaller_removes_only_managed_install(tmp_path: Path) -> 
     install_root = home / ".local" / "share" / "datacore-cli"
     cli = install_root / "venv" / "bin" / "datacore"
     cli.parent.mkdir(parents=True)
-    cli.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    cli.write_text(
+        "#!/bin/sh\n"
+        'case "$*" in\n'
+        "  *'auth logout'*)\n"
+        '    printf \'%s\\n\' \'{"error": {"code": "authentication_required"}}\'\n'
+        "    exit 2\n"
+        "    ;;\n"
+        "esac\n"
+        "exit 0\n",
+        encoding="utf-8",
+    )
     cli.chmod(0o755)
-    (install_root / ".datacore-cli-install").write_text("0.4.3\n", encoding="utf-8")
+    (install_root / ".datacore-cli-install").write_text("0.4.4\n", encoding="utf-8")
 
     bin_dir = home / ".local" / "bin"
     bin_dir.mkdir(parents=True)
@@ -210,6 +220,7 @@ def test_standalone_uninstaller_removes_only_managed_install(tmp_path: Path) -> 
         "SHELL": "/bin/zsh",
         "DATACORE_INSTALL_ROOT": str(install_root),
         "DATACORE_BIN_DIR": str(bin_dir),
+        "DATACORE_BASE_URL": "https://unit-test.invalid",
     }
 
     completed = subprocess.run(
@@ -245,6 +256,7 @@ def test_standalone_uninstaller_keeps_unrelated_launcher(tmp_path: Path) -> None
         "PATH": "/usr/bin:/bin",
         "DATACORE_INSTALL_ROOT": str(home / "missing-install"),
         "DATACORE_BIN_DIR": str(bin_dir),
+        "DATACORE_BASE_URL": "https://unit-test.invalid",
     }
 
     completed = subprocess.run(
@@ -259,6 +271,43 @@ def test_standalone_uninstaller_keeps_unrelated_launcher(tmp_path: Path) -> None
     assert launcher.is_symlink()
     assert unrelated.read_text(encoding="utf-8") == "keep\n"
     assert "kept unrelated launcher" in completed.stderr
+
+
+@pytest.mark.skipif(os.name == "nt" or shutil.which("sh") is None, reason="requires POSIX sh")
+def test_standalone_uninstaller_times_out_stuck_logout(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    install_root = home / "app"
+    cli = install_root / "venv" / "bin" / "datacore"
+    cli.parent.mkdir(parents=True)
+    cli.write_text(
+        "#!/bin/sh\ncase \"$*\" in\n  *'auth logout'*) exec sleep 30 ;;\nesac\nexit 0\n",
+        encoding="utf-8",
+    )
+    cli.chmod(0o755)
+    (install_root / ".datacore-cli-install").write_text("0.4.4\n", encoding="utf-8")
+    script = Path(__file__).resolve().parents[1] / "uninstall.sh"
+    environment = {
+        **os.environ,
+        "HOME": str(home),
+        "PATH": "/usr/bin:/bin",
+        "DATACORE_INSTALL_ROOT": str(install_root),
+        "DATACORE_BIN_DIR": str(home / "bin"),
+        "DATACORE_BASE_URL": "https://unit-test.invalid",
+        "DATACORE_LOGOUT_TIMEOUT_SECONDS": "1",
+    }
+
+    completed = subprocess.run(
+        ["sh", str(script)],
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=5,
+    )
+
+    assert completed.returncode == 0
+    assert not install_root.exists()
+    assert "Remote session revocation could not be confirmed" in completed.stderr
 
 
 def test_update_downloads_verified_github_release(monkeypatch) -> None:

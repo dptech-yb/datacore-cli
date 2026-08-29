@@ -4,8 +4,14 @@ set -eu
 INSTALL_ROOT="${DATACORE_INSTALL_ROOT:-$HOME/.local/share/datacore-cli}"
 BIN_DIR="${DATACORE_BIN_DIR:-$HOME/.local/bin}"
 SKILLS_DIR="${DATACORE_SKILLS_DIR:-$HOME/.agents/skills}"
+BASE_URL="${DATACORE_BASE_URL:-https://datacore.dp.qifalab.cn}"
+LOGOUT_TIMEOUT_SECONDS="${DATACORE_LOGOUT_TIMEOUT_SECONDS:-15}"
 PURGE_BACKUPS=0
 KEEP_AUTHORIZATION=0
+
+case "$LOGOUT_TIMEOUT_SECONDS" in
+  ''|*[!0-9]*|0) LOGOUT_TIMEOUT_SECONDS=15 ;;
+esac
 
 usage() {
   printf '%s\n' "Usage: uninstall.sh [--purge-backups] [--keep-authorization]"
@@ -49,21 +55,46 @@ if [ -n "$INSTALL_REAL" ] && [ -x "$INSTALL_REAL/venv/bin/datacore" ]; then
   CLI="$INSTALL_REAL/venv/bin/datacore"
   [ ! -x "$INSTALL_REAL/venv/bin/python" ] || CLI_PYTHON="$INSTALL_REAL/venv/bin/python"
 fi
+TIMEOUT_PYTHON="$CLI_PYTHON"
+if [ -z "$TIMEOUT_PYTHON" ] && command -v python3 >/dev/null 2>&1; then
+  TIMEOUT_PYTHON="$(command -v python3)"
+fi
 
 REMOTE_REVOCATION_WARNING=0
+LOCAL_CREDENTIAL_WARNING=0
 if [ -n "$CLI" ]; then
   if [ "$KEEP_AUTHORIZATION" -eq 0 ]; then
-    HAS_AUTHORIZATION=0
-    if [ -n "$CLI_PYTHON" ] && "$CLI_PYTHON" -c '
-from datacore_cli.credentials import load_token
-from datacore_cli.main import DEFAULT_BASE_URL
-raise SystemExit(0 if load_token(DEFAULT_BASE_URL) else 1)
-' >/dev/null 2>&1; then
-      HAS_AUTHORIZATION=1
+    LOGOUT_OUTPUT="$(mktemp 2>/dev/null || mktemp -t datacore-logout)"
+    set +e
+    if [ -n "$TIMEOUT_PYTHON" ]; then
+      "$TIMEOUT_PYTHON" - "$CLI" "$BASE_URL" "$LOGOUT_TIMEOUT_SECONDS" "$LOGOUT_OUTPUT" <<'PY'
+import subprocess
+import sys
+
+command = [sys.argv[1], "--base-url", sys.argv[2], "--json", "auth", "logout"]
+try:
+    with open(sys.argv[4], "wb") as output:
+        completed = subprocess.run(
+            command,
+            stdout=output,
+            stderr=subprocess.STDOUT,
+            timeout=float(sys.argv[3]),
+            check=False,
+        )
+except subprocess.TimeoutExpired:
+    raise SystemExit(124)
+raise SystemExit(completed.returncode)
+PY
+      LOGOUT_STATUS=$?
+    else
+      "$CLI" --base-url "$BASE_URL" --json auth logout >"$LOGOUT_OUTPUT" 2>&1
+      LOGOUT_STATUS=$?
     fi
-    if [ "$HAS_AUTHORIZATION" -eq 1 ]; then
-      "$CLI" auth logout >/dev/null 2>&1 || REMOTE_REVOCATION_WARNING=1
+    set -e
+    if [ "$LOGOUT_STATUS" -ne 0 ] && ! grep -F '"code": "authentication_required"' "$LOGOUT_OUTPUT" >/dev/null 2>&1; then
+      REMOTE_REVOCATION_WARNING=1
     fi
+    rm -f "$LOGOUT_OUTPUT"
     "$CLI" skills uninstall --yes >/dev/null 2>&1 || {
       printf '%s\n' "Warning: DataCore Skills could not be removed automatically." >&2
     }
@@ -78,23 +109,59 @@ fi
 
 if [ "$KEEP_AUTHORIZATION" -eq 0 ] && [ -n "$CLI_PYTHON" ]; then
   CREDENTIAL_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/datacore/credentials.json"
-  "$CLI_PYTHON" - "$CREDENTIAL_FILE" <<'PY' || true
+  "$CLI_PYTHON" - "$CREDENTIAL_FILE" "$BASE_URL" <<'PY' || true
 import json
+import os
 import sys
 from pathlib import Path
 
 path = Path(sys.argv[1])
+base_url = sys.argv[2].rstrip("/")
 try:
     value = json.loads(path.read_text(encoding="utf-8"))
 except (FileNotFoundError, OSError, ValueError):
     raise SystemExit(0)
-if isinstance(value, dict) and not value:
+if isinstance(value, dict):
+    value.pop(base_url, None)
+if isinstance(value, dict) and value:
+    path.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
+    os.chmod(path, 0o600)
+elif isinstance(value, dict):
     path.unlink(missing_ok=True)
     try:
         path.parent.rmdir()
     except OSError:
         pass
 PY
+fi
+
+if [ "$KEEP_AUTHORIZATION" -eq 0 ] && [ "$REMOTE_REVOCATION_WARNING" -eq 1 ] && [ "$(uname -s 2>/dev/null || true)" = "Darwin" ] && command -v security >/dev/null 2>&1; then
+  if security find-generic-password -s datacore-cli -a "$BASE_URL" >/dev/null 2>&1; then
+    if [ -n "$TIMEOUT_PYTHON" ]; then
+      set +e
+      "$TIMEOUT_PYTHON" - "$BASE_URL" <<'PY'
+import subprocess
+import sys
+
+try:
+    completed = subprocess.run(
+        ["security", "delete-generic-password", "-s", "datacore-cli", "-a", sys.argv[1]],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        timeout=5,
+        check=False,
+    )
+except subprocess.TimeoutExpired:
+    raise SystemExit(124)
+raise SystemExit(completed.returncode)
+PY
+      SECURITY_STATUS=$?
+      set -e
+    else
+      SECURITY_STATUS=1
+    fi
+    [ "$SECURITY_STATUS" -eq 0 ] || LOCAL_CREDENTIAL_WARNING=1
+  fi
 fi
 
 PROFILE_MARKER=""
@@ -172,6 +239,9 @@ else
 fi
 if [ "$REMOTE_REVOCATION_WARNING" -eq 1 ]; then
   printf '%s\n' "Remote session revocation could not be confirmed; revoke this device in DataCore Personal Center if needed." >&2
+fi
+if [ "$LOCAL_CREDENTIAL_WARNING" -eq 1 ]; then
+  printf '%s\n' "The local macOS Keychain credential could not be removed; delete the DataCore CLI item in Keychain Access." >&2
 fi
 if [ "$KEEP_AUTHORIZATION" -eq 0 ] && [ -n "${DATACORE_TOKEN:-}" ]; then
   printf '%s\n' "DATACORE_TOKEN is still set in the environment; remove it from the environment or secret manager separately." >&2

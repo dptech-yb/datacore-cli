@@ -25,7 +25,7 @@ irm https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.p
 需要固定版本或不执行引导时，也可以直接安装 GitHub Release 中的 wheel：
 
 ```bash
-python -m pip install https://github.com/dptech-yb/datacore-cli/releases/download/v0.4.3/datacore_cli-0.4.3-py3-none-any.whl
+python -m pip install https://github.com/dptech-yb/datacore-cli/releases/download/v0.4.4/datacore_cli-0.4.4-py3-none-any.whl
 datacore setup
 ```
 
