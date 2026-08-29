@@ -52,9 +52,10 @@ jobs:
           trap 'kill "$server_pid"' EXIT
           sleep 1
           test_home="$(mktemp -d)"
+          package_version="$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
           HOME="$test_home" DATACORE_INSTALL_ROOT="$test_home/app" DATACORE_BIN_DIR="$test_home/bin" \
             DATACORE_RELEASE_BASE="http://127.0.0.1:8765" \
-            sh install.sh --version v0.1.0 --no-setup
+            sh install.sh --version "v$package_version" --no-setup
           "$test_home/bin/datacore" --version
           "$test_home/bin/datacore" skills list
 
@@ -83,9 +84,10 @@ jobs:
           trap 'kill "$server_pid"' EXIT
           sleep 1
           test_home="$(mktemp -d)"
+          package_version="$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
           HOME="$test_home" DATACORE_INSTALL_ROOT="$test_home/app" DATACORE_BIN_DIR="$test_home/bin" \
             DATACORE_RELEASE_BASE="http://127.0.0.1:8765" \
-            sh install.sh --version v0.1.0 --no-setup
+            sh install.sh --version "v$package_version" --no-setup
           "$test_home/bin/datacore" --version
           "$test_home/bin/datacore" skills list
 
@@ -118,7 +120,8 @@ jobs:
             $testRoot = Join-Path $env:RUNNER_TEMP "datacore-installer"
             $env:DATACORE_INSTALL_ROOT = Join-Path $testRoot "app"
             $env:DATACORE_RELEASE_BASE = "http://127.0.0.1:8765"
-            & ./install.ps1 -Version v0.1.0 -NoSetup
+            $packageVersion = (python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])').Trim()
+            & ./install.ps1 -Version "v$packageVersion" -NoSetup
             & (Join-Path $env:DATACORE_INSTALL_ROOT "venv\Scripts\datacore.exe") --version
             & (Join-Path $env:DATACORE_INSTALL_ROOT "venv\Scripts\datacore.exe") skills list
           }
