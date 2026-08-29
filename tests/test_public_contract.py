@@ -223,17 +223,64 @@ def test_update_downloads_verified_github_release(monkeypatch) -> None:
             assert url.endswith(f"/v0.4.0/{wheel_name}")
             return Response(url, content=wheel_content)
 
-    calls: list[list[str]] = []
+    calls: list[tuple[list[str], dict[str, object]]] = []
     monkeypatch.setattr("datacore_cli.main.httpx.Client", Client)
     monkeypatch.setattr(
         "datacore_cli.main.subprocess.run",
-        lambda command, check: calls.append(command) or SimpleNamespace(returncode=0),
+        lambda command, **kwargs: calls.append((command, kwargs)) or SimpleNamespace(returncode=0),
     )
 
     result = _upgrade_from_release("")
 
     assert result == {"version": "0.4.0", "tag": "v0.4.0", "asset": wheel_name}
-    assert calls and calls[0][-2] == "--upgrade"
+    assert calls and calls[0][0][-2] == "--upgrade"
+    assert calls[0][1]["capture_output"] is True
+    assert calls[0][1]["text"] is True
+
+
+def test_json_update_is_one_machine_readable_document(monkeypatch, capsys) -> None:
+    subprocess_calls: list[dict[str, object]] = []
+    monkeypatch.setattr(
+        "datacore_cli.main._upgrade_from_release",
+        lambda _version: {
+            "version": "0.4.2",
+            "tag": "v0.4.2",
+            "asset": "datacore_cli-0.4.2-py3-none-any.whl",
+        },
+    )
+    monkeypatch.setattr(
+        "datacore_cli.main.subprocess.run",
+        lambda _command, **kwargs: (
+            subprocess_calls.append(kwargs)
+            or SimpleNamespace(returncode=0, stdout="child noise", stderr="")
+        ),
+    )
+
+    assert main(["--json", "update"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+
+    assert payload["ok"] is True
+    assert payload["data"]["version"] == "0.4.2"
+    assert subprocess_calls == [{"check": False, "capture_output": True, "text": True}]
+
+
+def test_json_uninstall_is_one_machine_readable_document(monkeypatch, capsys) -> None:
+    monkeypatch.setattr("datacore_cli.main.delete_token", lambda _base_url: None)
+    monkeypatch.setattr(
+        "datacore_cli.main.uninstall_skills",
+        lambda _names: {"removed": ["datacore"], "warnings": []},
+    )
+    monkeypatch.setattr(
+        "datacore_cli.main.subprocess.run",
+        lambda _command, **_kwargs: SimpleNamespace(returncode=0, stdout="pip noise", stderr=""),
+    )
+
+    assert main(["--json", "uninstall", "--yes"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+
+    assert payload["ok"] is True
+    assert payload["command"] == "uninstall"
+    assert payload["data"]["removed"] == ["datacore"]
 
 
 def test_update_rejects_release_with_wrong_checksum(monkeypatch) -> None:

@@ -216,6 +216,8 @@ def _upgrade_from_release(target_version: str) -> dict[str, str]:
                 str(wheel_path),
             ],
             check=False,
+            capture_output=True,
+            text=True,
         )
     if completed.returncode != 0:
         raise DataCoreCliError(
@@ -572,6 +574,8 @@ def main(argv: list[str] | None = None) -> int:
             skill_update = subprocess.run(
                 [sys.executable, "-m", "datacore_cli", "skills", "install", "--force"],
                 check=False,
+                capture_output=True,
+                text=True,
             )
             if skill_update.returncode != 0:
                 raise DataCoreCliError(
@@ -601,12 +605,32 @@ def main(argv: list[str] | None = None) -> int:
                 )
             delete_token(base_url)
             _source_root, names = _skill_inventory()
-            uninstall_skills(names)
+            skills_data = uninstall_skills(names)
+            warnings = skills_data.pop("warnings")
             completed = subprocess.run(
                 [sys.executable, "-m", "pip", "uninstall", "-y", "datacore-cli"],
                 check=False,
+                capture_output=True,
+                text=True,
             )
-            return completed.returncode
+            if completed.returncode != 0:
+                raise DataCoreCliError(
+                    "DataCore CLI 卸载失败",
+                    code="uninstall_failed",
+                    action="请重新运行官网卸载命令，或检查当前 Python 环境。",
+                )
+            _print(
+                {
+                    "ok": True,
+                    "command": "uninstall",
+                    "summary": "DataCore CLI 授权与 Skills 已移除",
+                    "data": skills_data,
+                    "artifacts": [],
+                    "warnings": warnings,
+                },
+                as_json=args.as_json,
+            )
+            return 0
 
         if args.group == "skills":
             _source_root, names = _skill_inventory()

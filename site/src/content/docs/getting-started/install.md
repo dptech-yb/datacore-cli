@@ -85,7 +85,7 @@ datacore --json conductivity status '完整的 DataCore 电导页面 URL'
 
 ```bash
 curl -fsSL https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.sh \
-  | sh -s -- --version v0.4.1 --no-setup
+  | sh -s -- --version v0.4.2 --no-setup
 ```
 
 也可以从 [GitHub Releases](https://github.com/dptech-yb/datacore-cli/releases) 下载 wheel、校验和、SBOM 和 Sigstore bundle。
