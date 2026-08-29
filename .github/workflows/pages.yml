@@ -41,9 +41,24 @@ jobs:
         working-directory: site
       - run: npm run build
         working-directory: site
-      - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+      # upload-pages-artifact excludes every dot-prefixed path. Package the
+      # Pages payload ourselves so Agent Skills discovery under /.well-known
+      # and .nojekyll are actually deployed.
+      - name: Package Pages artifact with discovery metadata
+        run: |
+          tar \
+            --dereference --hard-dereference \
+            --directory site/dist \
+            -cvf "$RUNNER_TEMP/artifact.tar" \
+            --exclude=.git \
+            --exclude=.github \
+            .
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          path: site/dist
+          name: github-pages
+          path: ${{ runner.temp }}/artifact.tar
+          retention-days: 1
+          if-no-files-found: error
 
   deploy:
     environment:
