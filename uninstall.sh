@@ -59,15 +59,24 @@ TIMEOUT_PYTHON="$CLI_PYTHON"
 if [ -z "$TIMEOUT_PYTHON" ] && command -v python3 >/dev/null 2>&1; then
   TIMEOUT_PYTHON="$(command -v python3)"
 fi
+CREDENTIAL_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/datacore/credentials.json"
 
 REMOTE_REVOCATION_WARNING=0
 LOCAL_CREDENTIAL_WARNING=0
 if [ -n "$CLI" ]; then
   if [ "$KEEP_AUTHORIZATION" -eq 0 ]; then
-    LOGOUT_OUTPUT="$(mktemp 2>/dev/null || mktemp -t datacore-logout)"
-    set +e
-    if [ -n "$TIMEOUT_PYTHON" ]; then
-      "$TIMEOUT_PYTHON" - "$CLI" "$BASE_URL" "$LOGOUT_TIMEOUT_SECONDS" "$LOGOUT_OUTPUT" <<'PY'
+    SHOULD_ATTEMPT_LOGOUT=1
+    if [ "$(uname -s 2>/dev/null || true)" = "Darwin" ]; then
+      SHOULD_ATTEMPT_LOGOUT=0
+      if [ -n "${DATACORE_TOKEN:-}" ] || grep -F "\"$BASE_URL\"" "$CREDENTIAL_FILE" >/dev/null 2>&1 || security find-generic-password -s datacore-cli -a "$BASE_URL" >/dev/null 2>&1; then
+        SHOULD_ATTEMPT_LOGOUT=1
+      fi
+    fi
+    if [ "$SHOULD_ATTEMPT_LOGOUT" -eq 1 ]; then
+      LOGOUT_OUTPUT="$(mktemp 2>/dev/null || mktemp -t datacore-logout)"
+      set +e
+      if [ -n "$TIMEOUT_PYTHON" ]; then
+        "$TIMEOUT_PYTHON" - "$CLI" "$BASE_URL" "$LOGOUT_TIMEOUT_SECONDS" "$LOGOUT_OUTPUT" <<'PY'
 import subprocess
 import sys
 
@@ -85,16 +94,17 @@ except subprocess.TimeoutExpired:
     raise SystemExit(124)
 raise SystemExit(completed.returncode)
 PY
-      LOGOUT_STATUS=$?
-    else
-      "$CLI" --base-url "$BASE_URL" --json auth logout >"$LOGOUT_OUTPUT" 2>&1
-      LOGOUT_STATUS=$?
+        LOGOUT_STATUS=$?
+      else
+        "$CLI" --base-url "$BASE_URL" --json auth logout >"$LOGOUT_OUTPUT" 2>&1
+        LOGOUT_STATUS=$?
+      fi
+      set -e
+      if [ "$LOGOUT_STATUS" -ne 0 ] && ! grep -F '"code": "authentication_required"' "$LOGOUT_OUTPUT" >/dev/null 2>&1; then
+        REMOTE_REVOCATION_WARNING=1
+      fi
+      rm -f "$LOGOUT_OUTPUT"
     fi
-    set -e
-    if [ "$LOGOUT_STATUS" -ne 0 ] && ! grep -F '"code": "authentication_required"' "$LOGOUT_OUTPUT" >/dev/null 2>&1; then
-      REMOTE_REVOCATION_WARNING=1
-    fi
-    rm -f "$LOGOUT_OUTPUT"
     "$CLI" skills uninstall --yes >/dev/null 2>&1 || {
       printf '%s\n' "Warning: DataCore Skills could not be removed automatically." >&2
     }
@@ -108,7 +118,6 @@ else
 fi
 
 if [ "$KEEP_AUTHORIZATION" -eq 0 ] && [ -n "$CLI_PYTHON" ]; then
-  CREDENTIAL_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/datacore/credentials.json"
   "$CLI_PYTHON" - "$CREDENTIAL_FILE" "$BASE_URL" <<'PY' || true
 import json
 import os

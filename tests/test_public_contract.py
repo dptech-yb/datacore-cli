@@ -195,7 +195,7 @@ def test_standalone_uninstaller_removes_only_managed_install(tmp_path: Path) -> 
         encoding="utf-8",
     )
     cli.chmod(0o755)
-    (install_root / ".datacore-cli-install").write_text("0.4.4\n", encoding="utf-8")
+    (install_root / ".datacore-cli-install").write_text("0.4.5\n", encoding="utf-8")
 
     bin_dir = home / ".local" / "bin"
     bin_dir.mkdir(parents=True)
@@ -284,7 +284,7 @@ def test_standalone_uninstaller_times_out_stuck_logout(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     cli.chmod(0o755)
-    (install_root / ".datacore-cli-install").write_text("0.4.4\n", encoding="utf-8")
+    (install_root / ".datacore-cli-install").write_text("0.4.5\n", encoding="utf-8")
     script = Path(__file__).resolve().parents[1] / "uninstall.sh"
     environment = {
         **os.environ,
@@ -293,6 +293,7 @@ def test_standalone_uninstaller_times_out_stuck_logout(tmp_path: Path) -> None:
         "DATACORE_INSTALL_ROOT": str(install_root),
         "DATACORE_BIN_DIR": str(home / "bin"),
         "DATACORE_BASE_URL": "https://unit-test.invalid",
+        "DATACORE_TOKEN": "test-token",
         "DATACORE_LOGOUT_TIMEOUT_SECONDS": "1",
     }
 

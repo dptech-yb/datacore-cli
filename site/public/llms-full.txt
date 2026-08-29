@@ -242,7 +242,7 @@ datacore --json conductivity status '完整的 DataCore 电导页面 URL'
 
 ```bash
 curl -fsSL https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.sh \
-  | sh -s -- --version v0.4.4 --no-setup
+  | sh -s -- --version v0.4.5 --no-setup
 ```
 
 也可以从 [GitHub Releases](https://github.com/dptech-yb/datacore-cli/releases) 下载 wheel、校验和、SBOM 和 Sigstore bundle。
@@ -1575,7 +1575,7 @@ Source: /skills/datacore/SKILL.md
 name: datacore
 description: "Use DataCore platform capabilities through the datacore CLI. Apply when a user asks to inspect or operate DataCore projects, experiments, conductivity optimization, reports, tools, reservations, reagents, or other DataCore resources. The CLI always acts as the signed-in DataCore user and preserves platform permissions."
 metadata:
-  version: "0.4.4"
+  version: "0.4.5"
   requires:
     bins: ["datacore"]
   cliHelp: "datacore --help"
@@ -1609,7 +1609,7 @@ Source: /skills/datacore-conductivity/SKILL.md
 name: datacore-conductivity
 description: "Inspect and operate DataCore's conductivity Bayesian-optimization loop through the datacore CLI. Apply for conductivity round status, recommendations, UniLab exports, measured-result validation/upload, five-fold training, fold recovery, model comparison, stop/continue decisions, or opening the next round."
 metadata:
-  version: "0.4.4"
+  version: "0.4.5"
   requires:
     bins: ["datacore"]
   cliHelp: "datacore conductivity --help"
