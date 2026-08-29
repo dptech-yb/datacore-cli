@@ -21,13 +21,15 @@ class DataCoreTransport:
         self.base_url = base_url.rstrip("/")
         self.token = token
         self.timeout = timeout
-        self.request_id = request_id.strip()
+        # 一个 CLI 命令可能编排多个 HTTP 请求。整条命令共用 request id，服务端据此
+        # 做日额度幂等扣费；每个原始请求仍独立进入分钟突发限制。
+        self.request_id = request_id.strip() or uuid.uuid4().hex
 
     def _headers(self) -> dict[str, str]:
         return {
             "Authorization": f"Bearer {self.token}",
-            "X-DataCore-Client": "datacore-cli/0.1",
-            "X-Request-ID": self.request_id or uuid.uuid4().hex,
+            "X-DataCore-Client": "datacore-cli/0.2",
+            "X-Request-ID": self.request_id,
         }
 
     def request(
@@ -36,7 +38,7 @@ class DataCoreTransport:
         path: str,
         *,
         params: dict[str, Any] | None = None,
-        json_body: dict[str, Any] | None = None,
+        json_body: Any = None,
         files: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
         binary: bool = False,
@@ -117,6 +119,12 @@ class DataCoreTransport:
 
     def post(self, path: str, **kwargs: Any) -> Any:
         return self.request("POST", path, **kwargs)
+
+    def put(self, path: str, **kwargs: Any) -> Any:
+        return self.request("PUT", path, **kwargs)
+
+    def patch(self, path: str, **kwargs: Any) -> Any:
+        return self.request("PATCH", path, **kwargs)
 
     def delete(self, path: str, **kwargs: Any) -> Any:
         return self.request("DELETE", path, **kwargs)

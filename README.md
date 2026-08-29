@@ -1,6 +1,6 @@
 # DataCore CLI
 
-DataCore CLI 将 DataCore 平台能力提供给终端、自动化程序和 AI Agent。首版覆盖完整的电导率预测迭代流程，并随安装包提供可安装的 DataCore Skills。
+DataCore CLI 将 DataCore 平台的普通用户能力提供给终端、自动化程序和 AI Agent。当前版本覆盖项目、实验、物质、工站预约、试剂任务、数据工具记录与完整电导率预测迭代，并随安装包提供可安装的 DataCore Skills。
 
 CLI 始终以当前登录的 DataCore 用户执行，沿用平台项目、实验和操作权限。写操作与云端计算必须显式确认。
 
@@ -25,7 +25,7 @@ irm https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.p
 需要固定版本或不执行引导时，也可以直接安装 GitHub Release 中的 wheel：
 
 ```bash
-python -m pip install https://github.com/dptech-yb/datacore-cli/releases/download/v0.1.0/datacore_cli-0.1.0-py3-none-any.whl
+python -m pip install https://github.com/dptech-yb/datacore-cli/releases/download/v0.2.0/datacore_cli-0.2.0-py3-none-any.whl
 datacore setup
 ```
 
@@ -38,9 +38,29 @@ datacore setup
 datacore doctor
 datacore auth status
 datacore skills list
+datacore --json capabilities
+datacore --json quota
 ```
 
-电导轮次可以使用完整 DataCore 页面链接或 `round` 编号：
+日常平台查询：
+
+```bash
+datacore --json project list
+datacore --json experiment list
+datacore --json chemical search 'LiPF6'
+datacore --json booking list --year 2026 --month 8
+datacore --json reagent inventory --q EC
+datacore --json tool history --limit 20
+```
+
+创建或修改使用明确的 JSON 文件并显式确认；例如：
+
+```bash
+datacore project create --file project.json --yes
+datacore booking create --file booking.json --yes
+```
+
+专业电导轮次可以使用完整 DataCore 页面链接或 `round` 编号：
 
 ```bash
 datacore --json conductivity status 'https://datacore.dp.qifalab.cn/experiments/123?tab=big-device&flow=conductivity&boChain=18&boTurn=2'
@@ -55,6 +75,8 @@ datacore conductivity retry-fold round28002 --fold 3 --yes
 
 - `datacore`：平台访问、安全与命令约定。
 - `datacore-conductivity`：电导率预测迭代工作流。
+
+额度按 DataCore 用户累计，CLI、Skills 和第三方 Agent 共用；每天北京时间 00:00 自动进入新周期。运行 `datacore quota` 查看剩余量，管理员可在平台管理页设置长期覆盖或仅今日加额。
 
 ## 自动化与 CI
 

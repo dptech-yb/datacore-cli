@@ -67,7 +67,7 @@ export default defineConfig({
 						name: 'DataCore CLI',
 						applicationCategory: 'DeveloperApplication',
 						operatingSystem: 'Windows, macOS, Linux',
-						softwareVersion: '0.1.0',
+						softwareVersion: '0.2.0',
 						url: 'https://datacore-cli.dp.cd.mba/',
 						codeRepository: 'https://github.com/dptech-yb/datacore-cli',
 					}),
@@ -87,6 +87,7 @@ export default defineConfig({
 				{
 					label: '按场景使用',
 					items: [
+						{ label: '全平台能力', slug: 'workflows/platform' },
 						{ label: '第三方 Agent 接入', slug: 'agents' },
 						{ label: '电导率预测迭代', slug: 'workflows/conductivity' },
 					],

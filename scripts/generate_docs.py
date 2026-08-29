@@ -134,7 +134,7 @@ def write_agent_surfaces(commands: list[dict[str, Any]]) -> None:
             {
                 "schemaVersion": "1",
                 "cli": "datacore",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "generatedFrom": "src/datacore_cli/main.py",
                 "commands": commands,
             },
@@ -150,9 +150,10 @@ def write_agent_surfaces(commands: list[dict[str, Any]]) -> None:
         ROOT / "src" / "datacore_cli" / "skills" / "datacore-conductivity" / "SKILL.md",
     ]
     for source in skills:
-        target = PUBLIC / "skills" / source.parent.name / "SKILL.md"
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(source, target)
+        target = PUBLIC / "skills" / source.parent.name
+        if target.exists():
+            shutil.rmtree(target)
+        shutil.copytree(source.parent, target)
 
     raw_pages: list[tuple[str, str, str]] = []
     for source in sorted(DOCS.rglob("*.md")):
@@ -167,7 +168,8 @@ def write_agent_surfaces(commands: list[dict[str, Any]]) -> None:
     index_text = """# DataCore CLI
 
 DataCore CLI 将平台能力提供给终端、自动化程序和 AI Agent。
-首版覆盖完整电导率预测迭代流程，并沿用当前登录用户的 DataCore 权限。
+当前版本覆盖项目、实验、物质、预约、试剂、工具记录与完整电导率预测迭代，
+并沿用当前登录用户的 DataCore 权限。
 
 - 人类文档：https://datacore-cli.dp.cd.mba/
 - 命令清单：https://datacore-cli.dp.cd.mba/commands.json
@@ -179,7 +181,7 @@ DataCore CLI 将平台能力提供给终端、自动化程序和 AI Agent。
     llms = [
         "# DataCore CLI",
         "",
-        "> DataCore 平台 CLI 与可安装 Agent Skills。首版覆盖电导率预测迭代。",
+        "> DataCore 平台 CLI 与可安装 Agent Skills。统一开放普通用户平台能力。",
         "",
         "## Start here",
         "",

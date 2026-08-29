@@ -9,6 +9,7 @@ import pytest
 from datacore_cli import CommandEngine, credentials
 from datacore_cli.errors import DataCoreCliError, exit_code_for_error
 from datacore_cli.main import main
+from datacore_cli.transport import DataCoreTransport
 
 
 def test_public_package_exports_command_engine() -> None:
@@ -57,3 +58,11 @@ def test_skills_install_is_idempotent(monkeypatch, tmp_path: Path, capsys) -> No
     assert main(["--json", "skills", "install"]) == 0
     second = json.loads(capsys.readouterr().out)
     assert sorted(second["data"]["skipped"]) == ["datacore", "datacore-conductivity"]
+
+
+def test_transport_reuses_one_request_id_for_a_command() -> None:
+    transport = DataCoreTransport(base_url="https://example.test", token="token")
+    first = transport._headers()["X-Request-ID"]
+    second = transport._headers()["X-Request-ID"]
+    assert first
+    assert first == second

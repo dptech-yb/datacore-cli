@@ -135,6 +135,586 @@
 | `--timeout` | HTTP 请求超时秒数 |
 | `--version` | show program's version number and exit |
 
+## `datacore quota`
+
+查看今日自动化额度
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+
+## `datacore capabilities`
+
+查看平台开放能力目录
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+
+## `datacore project list`
+
+列出有权访问的项目
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+
+## `datacore project show`
+
+查看项目详情
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `id` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+
+## `datacore project lineage`
+
+查看项目数据血缘
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `id` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+
+## `datacore project create`
+
+从 JSON 创建项目
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--file` | JSON 请求文件 |
+| `--yes` | 确认本次写入 |
+
+## `datacore project update`
+
+从 JSON 更新项目
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `id` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--file` | JSON 请求文件 |
+| `--yes` | 确认本次写入 |
+
+## `datacore experiment list`
+
+列出有权访问的实验
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+
+## `datacore experiment show`
+
+查看实验完整记录
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `id` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+
+## `datacore experiment lineage`
+
+查看实验数据血缘
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `id` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+
+## `datacore experiment create`
+
+在任务下从 JSON 创建实验
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `task_id` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--file` | JSON 请求文件 |
+| `--yes` | 确认本次写入 |
+
+## `datacore experiment update`
+
+从 JSON 更新实验
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `id` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--file` | JSON 请求文件 |
+| `--yes` | 确认本次写入 |
+
+## `datacore chemical search`
+
+搜索物质
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `q` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--category` | — |
+| `--limit` | — |
+| `--offset` | — |
+
+## `datacore chemical show`
+
+查看物质详情
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `id` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+
+## `datacore chemical resolve`
+
+批量解析物质名称
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `names` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+
+## `datacore booking list`
+
+查看预约
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--year` | — |
+| `--month` | — |
+
+## `datacore booking show`
+
+查看预约详情
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `id` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+
+## `datacore booking qualified`
+
+查看可选执行人
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--station` | — |
+| `--material-state` | — |
+
+## `datacore booking create`
+
+从 JSON 创建预约
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--file` | JSON 请求文件 |
+| `--yes` | 确认本次写入 |
+
+## `datacore booking update`
+
+从 JSON 更新预约
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `id` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--file` | JSON 请求文件 |
+| `--yes` | 确认本次写入 |
+
+## `datacore booking cancel`
+
+取消预约
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `id` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--yes` | — |
+
+## `datacore reagent inventory`
+
+查询库存
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--q` | — |
+| `--status` | — |
+| `--limit` | — |
+| `--offset` | — |
+
+## `datacore reagent substances`
+
+查询试剂物质
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--q` | — |
+| `--status` | — |
+| `--limit` | — |
+| `--offset` | — |
+
+## `datacore reagent workbench`
+
+查看工作台
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--q` | — |
+| `--status` | — |
+| `--limit` | — |
+| `--offset` | — |
+
+## `datacore reagent tasks`
+
+查看任务
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--q` | — |
+| `--status` | — |
+| `--limit` | — |
+| `--offset` | — |
+
+## `datacore reagent task`
+
+查看任务详情
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `id` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+
+## `datacore reagent create-task`
+
+从 JSON 创建任务
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--file` | JSON 请求文件 |
+| `--yes` | 确认本次写入 |
+
+## `datacore reagent assign`
+
+指派任务
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `id` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--file` | JSON 请求文件 |
+| `--yes` | 确认本次写入 |
+
+## `datacore reagent status`
+
+更新任务状态
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `id` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--file` | JSON 请求文件 |
+| `--yes` | 确认本次写入 |
+
+## `datacore reagent confirm`
+
+确认任务
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `id` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--yes` | — |
+
+## `datacore tool history`
+
+查看本人的工具运行历史
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--limit` | — |
+
 ## `datacore conductivity status`
 
 查看轮次状态与下一步动作

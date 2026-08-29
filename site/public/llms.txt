@@ -1,6 +1,6 @@
 # DataCore CLI
 
-> DataCore 平台 CLI 与可安装 Agent Skills。首版覆盖电导率预测迭代。
+> DataCore 平台 CLI 与可安装 Agent Skills。统一开放普通用户平台能力。
 
 ## Start here
 

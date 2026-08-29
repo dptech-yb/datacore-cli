@@ -33,12 +33,12 @@ template: splash
         <p class="dc-console-label step">02 · AUTHORIZE</p>
         <div class="dc-console-command"><span>$</span><code>{'datacore auth login'}</code></div>
         <p class="dc-console-label step">03 · RUN A WORKFLOW</p>
-        <div class="dc-console-command"><span>$</span><code>{'datacore --json conductivity status TARGET'}</code></div>
+        <div class="dc-console-command"><span>$</span><code>{'datacore --json project list'}</code></div>
         <div class="dc-console-result">
-          <div class="dc-result-head"><span class="dc-status-dot"></span><strong>下一步已识别</strong><small>OK</small></div>
+          <div class="dc-result-head"><span class="dc-status-dot"></span><strong>项目已读取</strong><small>OK</small></div>
           <dl>
-            <div><dt>command</dt><dd>conductivity.status</dd></div>
-            <div><dt>nextAction</dt><dd>upload_measurements</dd></div>
+            <div><dt>command</dt><dd>project.list</dd></div>
+            <div><dt>scope</dt><dd>projects:read</dd></div>
             <div><dt>retryable</dt><dd>false</dd></div>
           </dl>
         </div>
@@ -75,17 +75,17 @@ template: splash
 
   <section class="dc-section dc-workflow-section">
     <div class="dc-section-heading compact">
-      <p class="dc-eyebrow">CONDUCTIVITY · FIRST WORKFLOW</p>
-      <h2>电导迭代，全流程都有命令。</h2>
-      <p>使用完整页面 URL 定位实验、链路和轮次。每一步都复用平台权限与业务校验。</p>
+      <p class="dc-eyebrow">ONE CLI · PLATFORM CAPABILITIES</p>
+      <h2>日常平台工作，走同一条能力通道。</h2>
+      <p>项目、实验、实验资源和专业工作流复用同一身份、权限、额度与结构化输出。</p>
     </div>
     <div class="dc-workflow">
-      <article><span>01</span><h3>查询状态</h3><p>让服务端告诉你当前阶段和唯一下一步。</p><code>conductivity status</code></article>
-      <article><span>02</span><h3>推荐配方</h3><p>调用用户自己的 Bohrium 凭据并导出 UniLab 任务。</p><code>recommend · export</code></article>
-      <article><span>03</span><h3>回传实测</h3><p>校验 CSV，并按推荐编号关联本轮结果。</p><code>validate · upload</code></article>
-      <article><span>04</span><h3>训练与下一轮</h3><p>查看五折状态，比较模型并安全开启下一轮。</p><code>train · compare · next</code></article>
+      <article><span>01</span><h3>项目与实验</h3><p>查询层级、完整记录和可追溯的数据血缘。</p><code>project · experiment</code></article>
+      <article><span>02</span><h3>实验资源</h3><p>查看和管理工站预约、试剂库存与配方任务。</p><code>booking · reagent</code></article>
+      <article><span>03</span><h3>数据能力</h3><p>搜索权威物质库并取回本人的工具运行记录。</p><code>chemical · tool</code></article>
+      <article><span>04</span><h3>专业工作流</h3><p>电导推荐、实测回传、五折训练和下一轮保持完整闭环。</p><code>conductivity</code></article>
     </div>
-    <a class="dc-text-link" href="/workflows/conductivity/">查看完整电导命令流程 <span>→</span></a>
+    <a class="dc-text-link" href="/workflows/platform/">查看全平台命令流程 <span>→</span></a>
   </section>
 
   <section class="dc-agent-entry">

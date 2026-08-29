@@ -8,13 +8,14 @@ DataCore Agent 不是唯一入口。任何能够执行本地命令、读取文�
 ## 最短接入路径
 
 1. 用户安装 CLI 并完成 `datacore setup`；
-2. Agent 读取 DataCore Skill 与电导 Skill；
+2. Agent 读取 DataCore 路由 Skill；只有电导任务才继续读取电导 Skill；
 3. Agent 先执行只读状态查询；
 4. 对写操作展示目标、影响和下一步，获得确认后再加 `--yes`；
 5. 长任务提交后查询状态，不因本地等待中断而重复创建任务。
 
 ```bash
-datacore --json conductivity status '完整的 DataCore 电导页面 URL'
+datacore --json project list
+datacore --json quota
 ```
 
 Agent 只需要处理三个稳定界面：
@@ -48,6 +49,7 @@ Agent 只需要处理三个稳定界面：
 - **权限一致**：Agent 与网页使用同一 DataCore 用户；
 - **业务规则一致**：不在 Prompt、脚本或不同 Agent 中重复实现校验逻辑；
 - **错误一致**：稳定错误码会给出明确的恢复动作；
+- **额度一致**：CLI、Skills 和不同 Agent 共用同一用户额度与北京时间重置周期；
 - **可替换**：Agent 可以增加、替换或下线，不影响平台核心工作流。
 
 ## 不要这样做

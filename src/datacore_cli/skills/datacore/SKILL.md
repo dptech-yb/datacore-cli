@@ -12,6 +12,12 @@ Use `datacore` as the deterministic execution layer. Do not reproduce DataCore b
 3. For a write or cloud-compute command, show the resolved target and action, obtain explicit confirmation, then pass `--yes`.
 4. Never request, print, log, or pass Bohrium AccessKeys on the command line. Compute commands use the current user's encrypted credential already managed by DataCore.
 5. Treat permission, validation, and lifecycle errors as authoritative platform decisions. Follow the returned `action`; do not bypass them.
-6. If the task concerns conductivity optimization, read the sibling `datacore-conductivity/SKILL.md` and follow it.
+6. Check `datacore --json capabilities` when uncertain whether a capability is currently exposed.
+7. Check `datacore --json quota` before large batches. Quotas belong to the DataCore user, reset at Beijing midnight, and are shared by CLI, Skills, and third-party Agents.
+8. If the task concerns conductivity optimization, read the sibling `datacore-conductivity/SKILL.md` and follow it.
 
-Read [CLI conventions](references/cli-conventions.md) only when authentication, JSON output, files, or error recovery matters.
+Read only the reference needed for the task:
+
+- [CLI conventions](references/cli-conventions.md): authentication, JSON output, files, errors, or quotas.
+- [Projects and experiments](references/projects-and-experiments.md): project or experiment discovery, lineage, create, or update.
+- [Experimental resources](references/experimental-resources.md): bookings, reagents, chemicals, or tool history.

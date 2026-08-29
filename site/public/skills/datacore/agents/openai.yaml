@@ -1,0 +1,4 @@
+interface:
+  display_name: "DataCore"
+  short_description: "Use DataCore platform capabilities through the CLI"
+  default_prompt: "Use the DataCore CLI to inspect or operate platform data with the current user permissions."

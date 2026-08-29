@@ -18,9 +18,27 @@ import httpx
 from .credentials import delete_token, load_token, save_token
 from .engine import CommandEngine
 from .errors import DataCoreCliError, exit_code_for_error
+from .platform import PlatformEngine
 from .transport import DataCoreTransport
 
 DEFAULT_BASE_URL = "https://datacore.dp.qifalab.cn"
+STANDARD_SCOPES = [
+    "platform:read",
+    "projects:read",
+    "projects:write",
+    "experiments:read",
+    "experiments:write",
+    "catalog:read",
+    "booking:read",
+    "booking:write",
+    "reagent:read",
+    "reagent:write",
+    "tools:read",
+    "conductivity:read",
+    "conductivity:export",
+    "conductivity:write",
+    "conductivity:compute",
+]
 
 
 def _configure_console() -> None:
@@ -99,12 +117,7 @@ def _auth_login(
         "clientName": "DataCore CLI",
         "deviceName": socket.gethostname(),
         "platform": f"{platform.system()} {platform.release()}",
-        "scopes": [
-            "conductivity:read",
-            "conductivity:export",
-            "conductivity:write",
-            "conductivity:compute",
-        ],
+        "scopes": STANDARD_SCOPES,
     }
     with httpx.Client(timeout=20) as client:
         response = client.post(f"{base_url.rstrip('/')}/api/cli-auth/device/start", json=body)
@@ -193,6 +206,90 @@ def _parser() -> argparse.ArgumentParser:
     install = skills_sub.add_parser("install", help="将内置 Skills 同步到本机")
     install.add_argument("--force", action="store_true")
     skills_sub.add_parser("list", help="列出 CLI 自带的 Skills")
+
+    sub.add_parser("quota", help="查看今日自动化额度")
+    sub.add_parser("capabilities", help="查看平台开放能力目录")
+
+    def add_id(parent: argparse._SubParsersAction, name: str, help_text: str):
+        item = parent.add_parser(name, help=help_text)
+        item.add_argument("id", type=int)
+        return item
+
+    def add_json_write(item: argparse.ArgumentParser) -> None:
+        item.add_argument("--file", required=True, help="JSON 请求文件")
+        item.add_argument("--yes", action="store_true", help="确认本次写入")
+
+    project = sub.add_parser("project", help="研发项目")
+    psub = project.add_subparsers(dest="project_command", required=True)
+    psub.add_parser("list", help="列出有权访问的项目")
+    add_id(psub, "show", "查看项目详情")
+    add_id(psub, "lineage", "查看项目数据血缘")
+    add_json_write(psub.add_parser("create", help="从 JSON 创建项目"))
+    add_json_write(add_id(psub, "update", "从 JSON 更新项目"))
+
+    experiment = sub.add_parser("experiment", help="实验记录")
+    esub = experiment.add_subparsers(dest="experiment_command", required=True)
+    esub.add_parser("list", help="列出有权访问的实验")
+    add_id(esub, "show", "查看实验完整记录")
+    add_id(esub, "lineage", "查看实验数据血缘")
+    create_exp = esub.add_parser("create", help="在任务下从 JSON 创建实验")
+    create_exp.add_argument("task_id", type=int)
+    add_json_write(create_exp)
+    add_json_write(add_id(esub, "update", "从 JSON 更新实验"))
+
+    chemical = sub.add_parser("chemical", help="平台物质库")
+    chsub = chemical.add_subparsers(dest="chemical_command", required=True)
+    search = chsub.add_parser("search", help="搜索物质")
+    search.add_argument("q", nargs="?", default="")
+    search.add_argument("--category", default="")
+    search.add_argument("--limit", type=int, default=50)
+    search.add_argument("--offset", type=int, default=0)
+    add_id(chsub, "show", "查看物质详情")
+    resolve = chsub.add_parser("resolve", help="批量解析物质名称")
+    resolve.add_argument("names", nargs="+")
+
+    booking = sub.add_parser("booking", help="工站预约")
+    bsub = booking.add_subparsers(dest="booking_command", required=True)
+    blist = bsub.add_parser("list", help="查看预约")
+    blist.add_argument("--year", type=int)
+    blist.add_argument("--month", type=int)
+    add_id(bsub, "show", "查看预约详情")
+    qualified = bsub.add_parser("qualified", help="查看可选执行人")
+    qualified.add_argument("--station", default="")
+    qualified.add_argument("--material-state", choices=["liquid", "solid"], default="")
+    add_json_write(bsub.add_parser("create", help="从 JSON 创建预约"))
+    add_json_write(add_id(bsub, "update", "从 JSON 更新预约"))
+    cancel = add_id(bsub, "cancel", "取消预约")
+    cancel.add_argument("--yes", action="store_true")
+
+    reagent = sub.add_parser("reagent", help="试剂库存与任务")
+    rsub = reagent.add_subparsers(dest="reagent_command", required=True)
+    for name, label in (
+        ("inventory", "查询库存"),
+        ("substances", "查询试剂物质"),
+        ("workbench", "查看工作台"),
+        ("tasks", "查看任务"),
+    ):
+        item = rsub.add_parser(name, help=label)
+        item.add_argument("--q", default="")
+        item.add_argument("--status", default="")
+        item.add_argument("--limit", type=int, default=50)
+        item.add_argument("--offset", type=int, default=0)
+    task = rsub.add_parser("task", help="查看任务详情")
+    task.add_argument("id")
+    add_json_write(rsub.add_parser("create-task", help="从 JSON 创建任务"))
+    for name, label in (("assign", "指派任务"), ("status", "更新任务状态")):
+        item = rsub.add_parser(name, help=label)
+        item.add_argument("id")
+        add_json_write(item)
+    confirm = rsub.add_parser("confirm", help="确认任务")
+    confirm.add_argument("id")
+    confirm.add_argument("--yes", action="store_true")
+
+    tool = sub.add_parser("tool", help="数据工具")
+    tsub = tool.add_subparsers(dest="tool_command", required=True)
+    history = tsub.add_parser("history", help="查看本人的工具运行历史")
+    history.add_argument("--limit", type=int, default=50)
 
     conductivity = sub.add_parser("conductivity", help="电导完整工作流")
     csub = conductivity.add_subparsers(dest="conductivity_command", required=True)
@@ -318,7 +415,7 @@ def main(argv: list[str] | None = None) -> int:
                         token=token,
                         timeout=args.timeout,
                         request_id=args.request_id,
-                    ).get("/api/tools/chemical-space/config")
+                    ).get("/api/cli-platform/capabilities")
                     _print(
                         {
                             "ok": True,
@@ -362,7 +459,7 @@ def main(argv: list[str] | None = None) -> int:
                         token=token,
                         timeout=min(args.timeout, 20),
                         request_id=args.request_id,
-                    ).get("/api/tools/chemical-space/config")
+                    ).get("/api/cli-platform/capabilities")
                     checks["authorization"] = "valid"
                 except DataCoreCliError as exc:
                     checks["authorization"] = "invalid"
@@ -419,14 +516,14 @@ def main(argv: list[str] | None = None) -> int:
                 }
             else:
                 # 不把“本地有 token”误报成“仍然登录”：由服务端同时验证撤销、过期与 scope。
-                remote = transport.get("/api/tools/chemical-space/config")
+                remote = transport.get("/api/cli-auth/quota")
                 result = {
                     "ok": True,
                     "command": "auth.status",
                     "summary": "DataCore CLI 授权有效",
                     "data": {
                         "baseUrl": base_url,
-                        "conductivityEnabled": bool(remote.get("enabled", True)),
+                        "quota": remote,
                     },
                     "artifacts": [],
                     "warnings": [],
@@ -434,22 +531,35 @@ def main(argv: list[str] | None = None) -> int:
             _print(result, as_json=args.as_json)
             return 0
 
-        command = f"conductivity.{args.conductivity_command}"
         params = vars(args).copy()
         params["confirmed"] = bool(params.pop("yes", False))
         if "total_mass_g" in params:
             params["totalMassG"] = params.pop("total_mass_g")
         if "no_merge" in params:
             params["merge"] = not params.pop("no_merge")
-        result = CommandEngine(transport).execute(command, params)
+        if args.group == "conductivity":
+            command = f"conductivity.{args.conductivity_command}"
+            result = CommandEngine(transport).execute(command, params)
+        elif args.group in {"quota", "capabilities"}:
+            command = "quota.status" if args.group == "quota" else "capabilities.list"
+            result = PlatformEngine(transport).execute(command, params)
+        else:
+            command = f"{args.group}.{getattr(args, f'{args.group}_command')}"
+            result = PlatformEngine(transport).execute(command, params)
         _print(result, as_json=args.as_json)
         return 0
     except DataCoreCliError as exc:
         envelope = {
             "ok": False,
             "error": exc.to_dict(),
-            "command": getattr(args, "conductivity_command", None)
-            or getattr(args, "auth_command", None),
+            "command": next(
+                (
+                    getattr(args, key)
+                    for key in vars(args)
+                    if key.endswith("_command") and getattr(args, key, None)
+                ),
+                getattr(args, "group", None),
+            ),
         }
         if args.as_json:
             print(json.dumps(envelope, ensure_ascii=False, indent=2, default=str))
