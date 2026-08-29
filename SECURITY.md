@@ -12,4 +12,4 @@ Include the affected version, operating system, reproduction steps, observed imp
 
 ## Credential handling
 
-Interactive login stores the revocable DataCore authorization in the operating-system keychain. Headless automation should use `DATACORE_TOKEN`. File-based credential persistence is disabled unless the user explicitly opts in.
+Interactive login stores the revocable DataCore authorization in the operating-system keychain. Headless Agents should use the short-lived, single-use install flow exposed by DataCore; managed CI may use `DATACORE_TOKEN` only through a secret manager. File-based credential persistence is disabled unless the user explicitly opts in.

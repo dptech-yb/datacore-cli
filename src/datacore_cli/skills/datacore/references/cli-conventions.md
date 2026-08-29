@@ -3,9 +3,11 @@
 ## Authentication
 
 - `datacore auth login` opens the DataCore authorization page. Password, Feishu, or Bohrium login all resolve to the same DataCore identity.
+- When the user gives an explicit one-time Agent install instruction from DataCore, install the official CLI and pass its `dc_install_…` value only through standard input to `datacore setup --install-token-stdin --allow-file-credential`. Never place it in a command argument, log, generated file, or final response.
+- The install token expires in about 10 minutes and is consumed once. The exchanged `dc_cli_…` credential is written directly to the operating-system keychain or, only with the explicit fallback flag, a local `0600` file; it must never be printed.
 - `datacore auth logout` revokes the current client authorization, not merely the local token.
 - The user can inspect or revoke clients in DataCore Personal Center.
-- Never put a token or Bohrium AccessKey into arguments, prompts, logs, or generated files.
+- Never put a long-lived DataCore token or Bohrium AccessKey into arguments, prompts, logs, or generated files. The short-lived installation material is the only exception and must be treated as single-use bootstrap input.
 
 ## Output
 

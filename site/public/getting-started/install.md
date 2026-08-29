@@ -35,6 +35,10 @@ datacore skills list
 
 `datacore setup` 会同步 Skills，并在浏览器中打开 [DataCore 平台](https://datacore.dp.qifalab.cn/)授权页。密码、飞书和 Bohrium 登录最终都绑定到当前平台账号。
 
+### 让 Agent 独立完成安装
+
+如果运行环境无法打开浏览器，在 DataCore [`/cli`](https://datacore.dp.qifalab.cn/cli) 生成一次性 Agent 安装指令并复制给 Agent。它会安装 CLI 与 Skills，然后通过标准输入执行 `datacore setup --install-token-stdin --allow-file-credential`。安装 Token 约 10 分钟有效、只可兑换一次，正式凭据不会出现在命令参数或回复中。
+
 看到以下结果即可开始使用：
 
 - `doctor` 未报告阻断性问题；
@@ -57,7 +61,7 @@ datacore --json conductivity status '完整的 DataCore 电导页面 URL'
 
 ```bash
 curl -fsSL https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.sh \
-  | sh -s -- --version v0.2.1 --no-setup
+  | sh -s -- --version v0.3.0 --no-setup
 ```
 
 也可以从 [GitHub Releases](https://github.com/dptech-yb/datacore-cli/releases) 下载 wheel、校验和、SBOM 和 Sigstore bundle。

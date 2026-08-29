@@ -20,7 +20,7 @@ DataCore Agent 不是唯一入口。任何能够执行本地命令、读取文�
 
 ## 最短接入路径
 
-1. 用户安装 CLI 并完成 `datacore setup`；
+1. 用户安装 CLI 并完成 `datacore setup`，或在 DataCore `/cli` 复制一次性安装指令给 Agent；
 2. Agent 读取 DataCore 路由 Skill；只有电导任务才继续读取电导 Skill；
 3. Agent 先执行只读状态查询；
 4. 对写操作展示目标、影响和下一步，获得确认后再加 `--yes`；
@@ -38,6 +38,10 @@ Agent 只需要处理三个稳定界面：
 | Skills | 理解工作流、确认与恢复规则 | `datacore skills list` |
 | CLI | 执行确定性操作 | `datacore …` |
 | JSON | 读取结果、错误和产物 | 全局 `--json` |
+
+## 无浏览器安装
+
+用户生成的一次性安装指令包含短时 `dc_install_…` 材料。Agent 只能把它通过标准输入交给 `datacore setup --install-token-stdin --allow-file-credential`，不得放入命令参数、日志、文件或最终回复。它兑换后立即失效；正式凭据由 CLI 直接写入安全存储，并可由用户在个人中心撤销。
 
 ## Skills 在哪里
 
@@ -97,6 +101,16 @@ CLI 不创建第二套账号，也不拥有独立的数据权限。项目、实�
 - 无桌面环境使用 `DATACORE_TOKEN`，不要写进仓库或命令历史；
 - 本地文件保存默认关闭，只有用户明确传入 `--allow-file-credential` 才启用；
 - Bohrium AccessKey 不出现在命令参数、日志、Prompt 或导出文件中。
+
+## 无浏览器 Agent 安装
+
+在 DataCore `/cli` 或个人中心生成一次性 Agent 安装指令，然后把整段交给 Agent。安装 Token 约 10 分钟有效且只能兑换一次；CLI 必须通过标准输入消费：
+
+```bash
+datacore setup --install-token-stdin --allow-file-credential
+```
+
+兑换后的正式凭据不会显示在网页、Agent 回复或终端输出中，而是直接写入系统 Keychain；无 Keychain 环境只有在显式启用时才使用权限 `0600` 的本地文件。正式授权默认长期有效，也可在生成时选择 30、90、365 天，并能在个人中心立即撤销。
 
 ## 3. 查看与撤销
 
@@ -170,6 +184,10 @@ datacore skills list
 
 `datacore setup` 会同步 Skills，并在浏览器中打开 [DataCore 平台](https://datacore.dp.qifalab.cn/)授权页。密码、飞书和 Bohrium 登录最终都绑定到当前平台账号。
 
+### 让 Agent 独立完成安装
+
+如果运行环境无法打开浏览器，在 DataCore [`/cli`](https://datacore.dp.qifalab.cn/cli) 生成一次性 Agent 安装指令并复制给 Agent。它会安装 CLI 与 Skills，然后通过标准输入执行 `datacore setup --install-token-stdin --allow-file-credential`。安装 Token 约 10 分钟有效、只可兑换一次，正式凭据不会出现在命令参数或回复中。
+
 看到以下结果即可开始使用：
 
 - `doctor` 未报告阻断性问题；
@@ -192,7 +210,7 @@ datacore --json conductivity status '完整的 DataCore 电导页面 URL'
 
 ```bash
 curl -fsSL https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.sh \
-  | sh -s -- --version v0.2.1 --no-setup
+  | sh -s -- --version v0.3.0 --no-setup
 ```
 
 也可以从 [GitHub Releases](https://github.com/dptech-yb/datacore-cli/releases) 下载 wheel、校验和、SBOM 和 Sigstore bundle。
@@ -231,6 +249,7 @@ Source: /reference/commands.md
 | `--timeout` | HTTP 请求超时秒数 |
 | `--version` | show program's version number and exit |
 | `--no-browser` | — |
+| `--install-token-stdin` | — |
 | `--allow-file-credential` | — |
 
 ## `datacore doctor`
@@ -291,6 +310,7 @@ Source: /reference/commands.md
 | `--timeout` | HTTP 请求超时秒数 |
 | `--version` | show program's version number and exit |
 | `--no-browser` | — |
+| `--install-token-stdin` | 从标准输入安全兑换一次性 Agent 安装 Token |
 | `--allow-file-credential` | — |
 
 ## `datacore auth logout`
@@ -1238,7 +1258,7 @@ CLI 是 DataCore 的确定性执行层，不是权限代理。每个请求都以
 
 - DataCore 授权优先保存在系统 Keychain；
 - Bohrium AccessKey 由平台按用户加密管理，不进入 CLI 参数；
-- 无桌面自动化使用可撤销的 `DATACORE_TOKEN`；
+- 无桌面 Agent 优先使用短时、单次有效的安装 Token；受管 CI 才通过密钥管理器提供可撤销的 `DATACORE_TOKEN`；
 - 日志、Prompt、导出文件和错误详情不得包含秘密。
 
 ## 发布产物
@@ -1466,7 +1486,7 @@ Use `datacore` as the deterministic execution layer. Do not reproduce DataCore b
 1. Run read-only discovery or status commands before proposing a write.
 2. Use `--json` when another program or agent will consume the result.
 3. For a write or cloud-compute command, show the resolved target and action, obtain explicit confirmation, then pass `--yes`.
-4. Never request, print, log, or pass Bohrium AccessKeys on the command line. Compute commands use the current user's encrypted credential already managed by DataCore.
+4. Never request, print, log, or pass DataCore bearer tokens or Bohrium AccessKeys on the command line. A one-time Agent install token may only be consumed from standard input and must not be repeated in the final response. Compute commands use the current user's encrypted credential already managed by DataCore.
 5. Treat permission, validation, and lifecycle errors as authoritative platform decisions. Follow the returned `action`; do not bypass them.
 6. Check `datacore --json capabilities` when uncertain whether a capability is currently exposed.
 7. Check `datacore --json quota` before large batches. Quotas belong to the DataCore user, reset at Beijing midnight, and are shared by CLI, Skills, and third-party Agents.

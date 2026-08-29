@@ -16,7 +16,7 @@ CLI 是 DataCore 的确定性执行层，不是权限代理。每个请求都以
 
 - DataCore 授权优先保存在系统 Keychain；
 - Bohrium AccessKey 由平台按用户加密管理，不进入 CLI 参数；
-- 无桌面自动化使用可撤销的 `DATACORE_TOKEN`；
+- 无桌面 Agent 优先使用短时、单次有效的安装 Token；受管 CI 才通过密钥管理器提供可撤销的 `DATACORE_TOKEN`；
 - 日志、Prompt、导出文件和错误详情不得包含秘密。
 
 ## 发布产物

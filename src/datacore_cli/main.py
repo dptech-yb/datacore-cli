@@ -172,6 +172,94 @@ def _auth_login(
     raise DataCoreCliError("设备授权已超时，请重新运行 auth login", code="device_expired")
 
 
+def _auth_login_with_install_token(
+    base_url: str,
+    *,
+    as_json: bool,
+    allow_file_credential: bool,
+) -> int:
+    """从标准输入消费短时安装 Token；正式令牌永不写入终端输出。"""
+
+    if sys.stdin.isatty():
+        raise DataCoreCliError(
+            "--install-token-stdin 只从标准输入读取一次性安装 Token",
+            code="install_token_stdin_required",
+            action="让 Agent 通过标准输入传入 Token，不要把 Token 放进命令参数。",
+        )
+    install_token = sys.stdin.readline(4096).strip()
+    if not install_token.startswith("dc_install_"):
+        raise DataCoreCliError(
+            "标准输入中的 Agent 安装 Token 格式不正确",
+            code="invalid_install_token",
+            action="在 DataCore /cli 页面重新生成一次性安装 Token。",
+        )
+    body = {
+        "installToken": install_token,
+        "deviceName": socket.gethostname(),
+        "platform": f"{platform.system()} {platform.release()}",
+    }
+    with httpx.Client(timeout=20) as client:
+        response = client.post(
+            f"{base_url.rstrip('/')}/api/cli-auth/agent-install/exchange",
+            json=body,
+            headers={"Cache-Control": "no-store"},
+        )
+        if response.status_code >= 400:
+            try:
+                detail = response.json().get("detail") or {}
+            except (ValueError, TypeError):
+                detail = {}
+            raise DataCoreCliError(
+                str(detail.get("message") or "Agent 安装 Token 无效或已失效"),
+                code=str(detail.get("code") or "invalid_install_token"),
+                status_code=response.status_code,
+                action="在 DataCore /cli 页面重新生成一次性安装 Token。",
+            )
+        formal_token = str(response.json().get("token") or "")
+        if not formal_token.startswith("dc_cli_"):
+            raise DataCoreCliError(
+                "平台没有返回有效的 CLI 凭据",
+                code="invalid_authorization_response",
+            )
+        try:
+            storage = save_token(
+                base_url,
+                formal_token,
+                allow_file=allow_file_credential,
+            )
+        except RuntimeError as exc:
+            # 安全存储失败时立即撤销刚兑换的正式凭据，避免遗留无人管理的授权。
+            try:
+                client.delete(
+                    f"{base_url.rstrip('/')}/api/cli-auth/session",
+                    headers={"Authorization": f"Bearer {formal_token}"},
+                )
+            except httpx.HTTPError:
+                pass
+            raise DataCoreCliError(
+                str(exc),
+                code="credential_storage_unavailable",
+                action=(
+                    "配置系统 Keyring 后重新生成安装 Token；无桌面 Agent 可明确添加 "
+                    "--allow-file-credential，使用权限为 0600 的本地凭据文件。"
+                ),
+            ) from exc
+    result = {
+        "ok": True,
+        "command": "auth.login",
+        "summary": "DataCore Agent 授权安装成功",
+        "data": {"baseUrl": base_url, "storage": storage},
+        "artifacts": [],
+        "warnings": (
+            []
+            if storage == "keychain"
+            else ["凭据已按明确选择保存到权限为 0600 的本地配置文件。"]
+        ),
+    }
+    _print(result, as_json=as_json)
+    return 0
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="datacore", description="DataCore CLI")
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
@@ -183,6 +271,7 @@ def _parser() -> argparse.ArgumentParser:
 
     setup = sub.add_parser("setup", help="安装 Skills 并登录 DataCore")
     setup.add_argument("--no-browser", action="store_true")
+    setup.add_argument("--install-token-stdin", action="store_true")
     setup.add_argument("--allow-file-credential", action="store_true")
 
     sub.add_parser("doctor", help="检查 CLI、Skills、网络和授权状态")
@@ -197,6 +286,11 @@ def _parser() -> argparse.ArgumentParser:
     auth_sub = auth.add_subparsers(dest="auth_command", required=True)
     login = auth_sub.add_parser("login", help="在浏览器中授权当前设备")
     login.add_argument("--no-browser", action="store_true")
+    login.add_argument(
+        "--install-token-stdin",
+        action="store_true",
+        help="从标准输入安全兑换一次性 Agent 安装 Token",
+    )
     login.add_argument("--allow-file-credential", action="store_true")
     auth_sub.add_parser("logout", help="撤销当前设备授权")
     auth_sub.add_parser("status", help="查看当前登录身份与授权状态")
@@ -430,6 +524,12 @@ def main(argv: list[str] | None = None) -> int:
                     return 0
                 except DataCoreCliError:
                     delete_token(base_url)
+            if args.install_token_stdin:
+                return _auth_login_with_install_token(
+                    base_url,
+                    as_json=args.as_json,
+                    allow_file_credential=args.allow_file_credential,
+                )
             return _auth_login(
                 base_url,
                 as_json=args.as_json,
@@ -481,6 +581,12 @@ def main(argv: list[str] | None = None) -> int:
             return 0 if ready else 1
 
         if args.group == "auth" and args.auth_command == "login":
+            if args.install_token_stdin:
+                return _auth_login_with_install_token(
+                    base_url,
+                    as_json=args.as_json,
+                    allow_file_credential=args.allow_file_credential,
+                )
             return _auth_login(
                 base_url,
                 as_json=args.as_json,

@@ -25,11 +25,21 @@ irm https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.p
 需要固定版本或不执行引导时，也可以直接安装 GitHub Release 中的 wheel：
 
 ```bash
-python -m pip install https://github.com/dptech-yb/datacore-cli/releases/download/v0.2.1/datacore_cli-0.2.1-py3-none-any.whl
+python -m pip install https://github.com/dptech-yb/datacore-cli/releases/download/v0.3.0/datacore_cli-0.3.0-py3-none-any.whl
 datacore setup
 ```
 
 安装脚本会验证 Release 中 wheel 的 SHA256，然后安装 CLI、同步 Skills 并引导浏览器授权。密码、飞书和 Bohrium 登录最终均授权给当前 DataCore 平台账号。
+
+### 交给 Agent 安装
+
+无法打开浏览器或回传授权链接时，在 DataCore 的 `/cli` 页面生成“Agent 安装指令”，复制整段给 Agent。指令中的 `dc_install_…` Token 约 10 分钟有效、只能兑换一次；Agent 通过标准输入执行：
+
+```bash
+datacore setup --install-token-stdin --allow-file-credential
+```
+
+兑换后的正式凭据直接写入系统钥匙串；无钥匙串环境只有在上述明确选项下才保存为权限 `0600` 的本地文件。CLI 不打印正式凭据，授权可在个人中心随时撤销。
 
 ## 快速开始
 
@@ -80,7 +90,7 @@ datacore conductivity retry-fold round28002 --fold 3 --yes
 
 ## 自动化与 CI
 
-无桌面环境使用短期、可撤销的 `DATACORE_TOKEN`，不要把 Token 写入仓库或命令历史：
+受管 CI 可以通过机密变量提供可撤销的 `DATACORE_TOKEN`，不要把 Token 写入仓库或命令历史。普通无桌面 Agent 优先使用上面的一次性安装指令：
 
 ```bash
 export DATACORE_TOKEN='...'

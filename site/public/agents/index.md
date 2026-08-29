@@ -4,7 +4,7 @@ DataCore Agent 不是唯一入口。任何能够执行本地命令、读取文�
 
 ## 最短接入路径
 
-1. 用户安装 CLI 并完成 `datacore setup`；
+1. 用户安装 CLI 并完成 `datacore setup`，或在 DataCore `/cli` 复制一次性安装指令给 Agent；
 2. Agent 读取 DataCore 路由 Skill；只有电导任务才继续读取电导 Skill；
 3. Agent 先执行只读状态查询；
 4. 对写操作展示目标、影响和下一步，获得确认后再加 `--yes`；
@@ -22,6 +22,10 @@ Agent 只需要处理三个稳定界面：
 | Skills | 理解工作流、确认与恢复规则 | `datacore skills list` |
 | CLI | 执行确定性操作 | `datacore …` |
 | JSON | 读取结果、错误和产物 | 全局 `--json` |
+
+## 无浏览器安装
+
+用户生成的一次性安装指令包含短时 `dc_install_…` 材料。Agent 只能把它通过标准输入交给 `datacore setup --install-token-stdin --allow-file-credential`，不得放入命令参数、日志、文件或最终回复。它兑换后立即失效；正式凭据由 CLI 直接写入安全存储，并可由用户在个人中心撤销。
 
 ## Skills 在哪里
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import json
 import os
 from pathlib import Path
@@ -66,3 +67,94 @@ def test_transport_reuses_one_request_id_for_a_command() -> None:
     second = transport._headers()["X-Request-ID"]
     assert first
     assert first == second
+
+
+def test_agent_install_token_is_read_from_stdin_and_never_printed(
+    monkeypatch, capsys
+) -> None:
+    install_token = "dc_install_short_lived_secret"
+    formal_token = "dc_cli_long_lived_secret"
+    saved: dict[str, str] = {}
+
+    class Response:
+        status_code = 200
+
+        def json(self):
+            return {"token": formal_token, "authorization": {"id": "auth-1"}}
+
+    class Client:
+        def __init__(self, **_kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def post(self, _url, *, json, headers):
+            assert json["installToken"] == install_token
+            assert headers["Cache-Control"] == "no-store"
+            return Response()
+
+        def delete(self, *_args, **_kwargs):
+            raise AssertionError("successful storage must not revoke")
+
+    monkeypatch.setattr("datacore_cli.main.httpx.Client", Client)
+    monkeypatch.setattr("datacore_cli.main.sys.stdin", io.StringIO(f"{install_token}\n"))
+    monkeypatch.setattr(
+        "datacore_cli.main.save_token",
+        lambda base_url, token, allow_file=False: (
+            saved.update(base_url=base_url, token=token, allow_file=str(allow_file))
+            or "keychain"
+        ),
+    )
+    assert main(["--json", "auth", "login", "--install-token-stdin"]) == 0
+    output = capsys.readouterr().out
+    assert install_token not in output
+    assert formal_token not in output
+    assert saved["token"] == formal_token
+    assert json.loads(output)["data"]["storage"] == "keychain"
+
+
+def test_failed_agent_credential_storage_revokes_new_authorization(
+    monkeypatch, capsys
+) -> None:
+    formal_token = "dc_cli_must_be_revoked"
+    revoked: list[str] = []
+
+    class Response:
+        status_code = 200
+
+        def json(self):
+            return {"token": formal_token}
+
+    class Client:
+        def __init__(self, **_kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def post(self, *_args, **_kwargs):
+            return Response()
+
+        def delete(self, _url, *, headers):
+            revoked.append(headers["Authorization"])
+            return Response()
+
+    monkeypatch.setattr("datacore_cli.main.httpx.Client", Client)
+    monkeypatch.setattr(
+        "datacore_cli.main.sys.stdin", io.StringIO("dc_install_one_time\n")
+    )
+    monkeypatch.setattr(
+        "datacore_cli.main.save_token",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("no keyring")),
+    )
+    assert main(["auth", "login", "--install-token-stdin"]) != 0
+    output = capsys.readouterr()
+    assert formal_token not in output.out + output.err
+    assert revoked == [f"Bearer {formal_token}"]

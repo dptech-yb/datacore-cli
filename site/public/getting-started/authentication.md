@@ -19,6 +19,16 @@ CLI 不创建第二套账号，也不拥有独立的数据权限。项目、实�
 - 本地文件保存默认关闭，只有用户明确传入 `--allow-file-credential` 才启用；
 - Bohrium AccessKey 不出现在命令参数、日志、Prompt 或导出文件中。
 
+## 无浏览器 Agent 安装
+
+在 DataCore `/cli` 或个人中心生成一次性 Agent 安装指令，然后把整段交给 Agent。安装 Token 约 10 分钟有效且只能兑换一次；CLI 必须通过标准输入消费：
+
+```bash
+datacore setup --install-token-stdin --allow-file-credential
+```
+
+兑换后的正式凭据不会显示在网页、Agent 回复或终端输出中，而是直接写入系统 Keychain；无 Keychain 环境只有在显式启用时才使用权限 `0600` 的本地文件。正式授权默认长期有效，也可在生成时选择 30、90、365 天，并能在个人中心立即撤销。
+
 ## 3. 查看与撤销
 
 ```bash

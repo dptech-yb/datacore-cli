@@ -16,6 +16,7 @@
 | `--timeout` | HTTP 请求超时秒数 |
 | `--version` | show program's version number and exit |
 | `--no-browser` | — |
+| `--install-token-stdin` | — |
 | `--allow-file-credential` | — |
 
 ## `datacore doctor`
@@ -76,6 +77,7 @@
 | `--timeout` | HTTP 请求超时秒数 |
 | `--version` | show program's version number and exit |
 | `--no-browser` | — |
+| `--install-token-stdin` | 从标准输入安全兑换一次性 Agent 安装 Token |
 | `--allow-file-credential` | — |
 
 ## `datacore auth logout`

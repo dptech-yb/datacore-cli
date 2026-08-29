@@ -10,7 +10,7 @@ ALLOW_FILE_CREDENTIAL=0
 UNINSTALL=0
 
 usage() {
-  printf '%s\n' "Usage: install.sh [--version v0.2.1] [--no-setup] [--allow-file-credential] [--uninstall]"
+  printf '%s\n' "Usage: install.sh [--version v0.3.0] [--no-setup] [--allow-file-credential] [--uninstall]"
 }
 
 while [ "$#" -gt 0 ]; do

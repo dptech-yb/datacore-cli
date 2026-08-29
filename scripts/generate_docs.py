@@ -13,6 +13,7 @@ DOCS = SITE / "src" / "content" / "docs"
 PUBLIC = SITE / "public"
 sys.path.insert(0, str(ROOT / "src"))
 
+from datacore_cli import __version__  # noqa: E402
 from datacore_cli.main import _parser  # noqa: E402
 
 
@@ -134,7 +135,7 @@ def write_agent_surfaces(commands: list[dict[str, Any]]) -> None:
             {
                 "schemaVersion": "1",
                 "cli": "datacore",
-                "version": "0.2.1",
+                "version": __version__,
                 "generatedFrom": "src/datacore_cli/main.py",
                 "commands": commands,
             },
