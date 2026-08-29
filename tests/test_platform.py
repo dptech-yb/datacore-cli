@@ -31,6 +31,24 @@ def test_read_command_uses_stable_platform_endpoint() -> None:
     assert out["data"]["path"] == "/api/projects/7"
 
 
+@pytest.mark.parametrize(
+    ("command", "resource", "label"),
+    [
+        ("reagent.inventory", "inventory", "库存"),
+        ("reagent.substances", "substances", "物质"),
+        ("reagent.workbench", "workbench", "工作台"),
+        ("reagent.tasks", "tasks", "任务"),
+    ],
+)
+def test_reagent_read_separates_api_resource_from_chinese_label(
+    command: str, resource: str, label: str
+) -> None:
+    out = PlatformEngine(FakeTransport()).execute(command, {"limit": 1})
+    assert out["summary"] == f"已读取试剂{label}"
+    assert out["data"]["path"] == f"/api/cli-platform/reagents/{resource}"
+    assert out["data"]["params"] == {"limit": 1}
+
+
 def test_json_write_requires_confirmation_before_network(tmp_path) -> None:
     payload = tmp_path / "project.json"
     payload.write_text(json.dumps({"name": "Demo"}), "utf-8")

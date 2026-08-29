@@ -134,7 +134,7 @@ def write_agent_surfaces(commands: list[dict[str, Any]]) -> None:
             {
                 "schemaVersion": "1",
                 "cli": "datacore",
-                "version": "0.2.0",
+                "version": "0.2.1",
                 "generatedFrom": "src/datacore_cli/main.py",
                 "commands": commands,
             },

@@ -280,7 +280,13 @@ class PlatformEngine:
             self.transport.delete(f"/api/cli-platform/bookings/{task_id}"),
         )
 
-    def _reagent_read(self, command: str, resource: str, params: dict[str, Any]) -> dict[str, Any]:
+    def _reagent_read(
+        self,
+        command: str,
+        resource: str,
+        label: str,
+        params: dict[str, Any],
+    ) -> dict[str, Any]:
         query = {
             key: value
             for key, value in params.items()
@@ -288,21 +294,21 @@ class PlatformEngine:
         }
         return self._result(
             command,
-            f"已读取试剂{resource}",
+            f"已读取试剂{label}",
             self.transport.get(f"/api/cli-platform/reagents/{resource}", params=query),
         )
 
     def _reagent_inventory(self, params: dict[str, Any]) -> dict[str, Any]:
-        return self._reagent_read("reagent.inventory", "库存", params)
+        return self._reagent_read("reagent.inventory", "inventory", "库存", params)
 
     def _reagent_substances(self, params: dict[str, Any]) -> dict[str, Any]:
-        return self._reagent_read("reagent.substances", "物质", params)
+        return self._reagent_read("reagent.substances", "substances", "物质", params)
 
     def _reagent_workbench(self, params: dict[str, Any]) -> dict[str, Any]:
-        return self._reagent_read("reagent.workbench", "工作台", params)
+        return self._reagent_read("reagent.workbench", "workbench", "工作台", params)
 
     def _reagent_tasks(self, params: dict[str, Any]) -> dict[str, Any]:
-        return self._reagent_read("reagent.tasks", "任务", params)
+        return self._reagent_read("reagent.tasks", "tasks", "任务", params)
 
     def _reagent_task(self, params: dict[str, Any]) -> dict[str, Any]:
         recipe_id = str(params["id"])
