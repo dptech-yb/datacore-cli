@@ -498,6 +498,17 @@ def test_transport_expands_bohrium_binding_action_url(monkeypatch) -> None:
     assert "https://datacore.example/account#bohrium" in caught.value.action
 
 
+def test_installer_help_does_not_pin_an_old_release() -> None:
+    script = Path(__file__).resolve().parents[1] / "install.sh"
+    result = subprocess.run(
+        ["sh", str(script), "--help"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert "--version vX.Y.Z" in result.stdout
+
+
 def test_agent_install_token_is_read_from_stdin_and_never_printed(monkeypatch, capsys) -> None:
     install_token = "dc_install_short_lived_secret"
     formal_token = "dc_cli_long_lived_secret"
