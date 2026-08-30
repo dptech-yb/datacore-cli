@@ -2,7 +2,7 @@
 name: datacore
 description: "Use DataCore platform capabilities through the datacore CLI. Apply when a user asks to inspect or operate DataCore projects, experiments, conductivity optimization, reports, tools, reservations, reagents, or other DataCore resources. The CLI always acts as the signed-in DataCore user and preserves platform permissions."
 metadata:
-  version: "0.4.7"
+  version: "0.4.8"
   requires:
     bins: ["datacore"]
   cliHelp: "datacore --help"
@@ -20,6 +20,8 @@ Use `datacore` as the deterministic execution layer. Do not reproduce DataCore b
 6. Check `datacore --json capabilities` when uncertain whether a capability is currently exposed.
 7. Check `datacore --json quota` before large batches. Quotas belong to the DataCore user, reset at Beijing midnight, and are shared by CLI, Skills, and third-party Agents.
 8. If the task concerns conductivity optimization, read the sibling `datacore-conductivity/SKILL.md` and follow it.
+
+When the user has not already identified a project or experiment, discover them in user-facing order: run `project list`, then `experiment list --project-id ID`. Present names rather than internal identifiers and ask only when more than one reasonable choice remains.
 
 Read only the reference needed for the task:
 

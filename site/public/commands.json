@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1",
   "cli": "datacore",
-  "version": "0.4.5",
+  "version": "0.4.8",
   "generatedFrom": "src/datacore_cli/main.py",
   "commands": [
     {
@@ -1291,6 +1291,16 @@
           ],
           "required": false,
           "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "project_id",
+          "flags": [
+            "--project-id"
+          ],
+          "required": false,
+          "help": "",
           "choices": [],
           "default": null
         }
@@ -3142,6 +3152,72 @@
           "help": "",
           "choices": [],
           "default": 50
+        }
+      ],
+      "requiresConfirmation": false,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore conductivity list",
+      "summary": "列出实验中的探索记录和轮次",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "experiment",
+          "flags": [],
+          "required": true,
+          "help": "实验 ID 或 DataCore 实验页面链接",
+          "choices": [],
+          "default": null
         }
       ],
       "requiresConfirmation": false,

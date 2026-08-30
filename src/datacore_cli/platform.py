@@ -148,11 +148,15 @@ class PlatformEngine:
             lambda body: self.transport.patch(f"/api/projects/{pid}", json_body=body),
         )
 
-    def _experiment_list(self, _params: dict[str, Any]) -> dict[str, Any]:
+    def _experiment_list(self, params: dict[str, Any]) -> dict[str, Any]:
+        items = self.transport.get("/api/projects/experiments/navigable")
+        project_id = params.get("project_id")
+        if project_id is not None and isinstance(items, list):
+            items = [item for item in items if int(item.get("projectId") or 0) == int(project_id)]
         return self._result(
             "experiment.list",
             "已列出可访问实验",
-            self.transport.get("/api/projects/experiments/navigable"),
+            items,
         )
 
     def _experiment_show(self, params: dict[str, Any]) -> dict[str, Any]:

@@ -310,6 +310,7 @@ description: 由当前 DataCore CLI 参数定义自动生成的命令与选项�
 | `--request-id` | 为本次调用指定可追踪请求 ID |
 | `--timeout` | HTTP 请求超时秒数 |
 | `--version` | show program's version number and exit |
+| `--project-id` | — |
 
 ## `datacore experiment show`
 
@@ -756,6 +757,26 @@ description: 由当前 DataCore CLI 参数定义自动生成的命令与选项�
 | `--timeout` | HTTP 请求超时秒数 |
 | `--version` | show program's version number and exit |
 | `--limit` | — |
+
+## `datacore conductivity list`
+
+列出实验中的探索记录和轮次
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `experiment` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
 
 ## `datacore conductivity status`
 

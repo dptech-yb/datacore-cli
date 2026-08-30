@@ -57,7 +57,7 @@ Agent 应优先遵循 `action`，并根据 `retryable` 判断是否能做有限�
 ## 请求追踪
 
 ```bash
-datacore --request-id my-run-20260828 --json conductivity status TARGET
+datacore --request-id my-run-20260828 --json conductivity status "<轮次页面链接>"
 ```
 
 为自动化调用设置稳定请求 ID，便于把客户端日志与 DataCore 服务端审计关联起来。

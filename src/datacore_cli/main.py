@@ -459,7 +459,8 @@ def _parser() -> argparse.ArgumentParser:
 
     experiment = sub.add_parser("experiment", help="实验记录")
     esub = experiment.add_subparsers(dest="experiment_command", required=True)
-    esub.add_parser("list", help="列出有权访问的实验")
+    experiment_list = esub.add_parser("list", help="列出有权访问的实验")
+    experiment_list.add_argument("--project-id", type=int)
     add_id(esub, "show", "查看实验完整记录")
     add_id(esub, "lineage", "查看实验数据血缘")
     create_exp = esub.add_parser("create", help="在任务下从 JSON 创建实验")
@@ -523,6 +524,8 @@ def _parser() -> argparse.ArgumentParser:
 
     conductivity = sub.add_parser("conductivity", help="电导完整工作流")
     csub = conductivity.add_subparsers(dest="conductivity_command", required=True)
+    conductivity_list = csub.add_parser("list", help="列出实验中的探索记录和轮次")
+    conductivity_list.add_argument("experiment", help="实验 ID 或 DataCore 实验页面链接")
     conductivity_help = {
         "status": "查看轮次状态与下一步动作",
         "recommend": "提交本轮推荐配方计算",

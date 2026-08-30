@@ -25,7 +25,7 @@ irm https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.p
 需要固定版本或不执行引导时，也可以直接安装 GitHub Release 中的 wheel：
 
 ```bash
-python -m pip install https://github.com/dptech-yb/datacore-cli/releases/download/v0.4.7/datacore_cli-0.4.7-py3-none-any.whl
+python -m pip install https://github.com/dptech-yb/datacore-cli/releases/download/v0.4.8/datacore_cli-0.4.8-py3-none-any.whl
 datacore setup
 ```
 
@@ -84,15 +84,17 @@ datacore project create --file project.json --yes
 datacore booking create --file booking.json --yes
 ```
 
-专业电导轮次可以使用完整 DataCore 页面链接或 `round` 编号：
+专业电导工作流先按项目和实验列出可选轮次，再使用返回的轮次页面链接继续：
 
 ```bash
-datacore --json conductivity status 'https://datacore.dp.qifalab.cn/experiments/123?tab=big-device&flow=conductivity&boChain=18&boTurn=2'
-datacore conductivity export round28002 --format unilab --output task.xls
-datacore conductivity validate round28002 measured.csv
-datacore conductivity upload round28002 measured.csv --yes
-datacore conductivity train round28002 --wait --yes
-datacore conductivity retry-fold round28002 --fold 3 --yes
+datacore --json experiment list --project-id 17
+datacore --json conductivity list 48
+datacore --json conductivity status '<轮次页面链接>'
+datacore conductivity export '<轮次页面链接>' --format unilab --output task.xls
+datacore conductivity validate '<轮次页面链接>' measured.csv
+datacore conductivity upload '<轮次页面链接>' measured.csv --yes
+datacore conductivity train '<轮次页面链接>' --wait --yes
+datacore conductivity retry-fold '<轮次页面链接>' --fold 3 --yes
 ```
 
 完整约定见内置 Skills：

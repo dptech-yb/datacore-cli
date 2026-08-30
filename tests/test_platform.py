@@ -14,6 +14,11 @@ class FakeTransport:
 
     def get(self, path: str, **kwargs):
         self.calls.append(("GET", path, kwargs.get("params")))
+        if path == "/api/projects/experiments/navigable":
+            return [
+                {"id": 1, "name": "实验 A", "projectId": 7},
+                {"id": 2, "name": "实验 B", "projectId": 8},
+            ]
         return {"path": path, "params": kwargs.get("params")}
 
     def post(self, path: str, **kwargs):
@@ -29,6 +34,11 @@ def test_read_command_uses_stable_platform_endpoint() -> None:
     out = PlatformEngine(FakeTransport()).execute("project.show", {"id": 7})
     assert out["command"] == "project.show"
     assert out["data"]["path"] == "/api/projects/7"
+
+
+def test_experiment_list_can_follow_a_project_selection() -> None:
+    out = PlatformEngine(FakeTransport()).execute("experiment.list", {"project_id": 7})
+    assert out["data"] == [{"id": 1, "name": "实验 A", "projectId": 7}]
 
 
 @pytest.mark.parametrize(

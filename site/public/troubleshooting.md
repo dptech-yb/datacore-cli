@@ -5,7 +5,8 @@
 ```bash
 datacore doctor
 datacore auth status
-datacore --json conductivity status TARGET
+datacore --json conductivity list "<实验 ID 或页面链接>"
+datacore --json conductivity status "<轮次页面链接>"
 ```
 
 | 现象 | 先做什么 | 不要做什么 |

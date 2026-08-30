@@ -8,11 +8,18 @@ from __future__ import annotations
 
 import time
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from .errors import DataCoreCliError
-from .target import ConductivityTarget, parse_target
+from .target import (
+    ConductivityTarget,
+    page_url_for_experiment,
+    page_url_for_round,
+    parse_target,
+)
 from .transport import DataCoreTransport, save_binary
 
 API = "/api/tools/chemical-space"
@@ -65,24 +72,181 @@ class CommandEngine:
                 action="检查目标与参数后使用 --yes；Agent 必须先取得用户明确同意。",
             )
 
+    def _experiment_target(self, value: str) -> ConductivityTarget:
+        raw = str(value or "").strip()
+        if raw.isdigit() and int(raw) > 0:
+            experiment_id = int(raw)
+            api_base_url = str(
+                getattr(self.transport, "base_url", "https://datacore.dp.qifalab.cn")
+            ).rstrip("/")
+            parsed_base = urlparse(api_base_url)
+            hostname = str(parsed_base.hostname or "")
+            base_url = (
+                api_base_url
+                if hostname not in {"", "localhost", "127.0.0.1", "::1"} and "." in hostname
+                else "https://datacore.dp.qifalab.cn"
+            )
+            raw = f"{base_url}/experiments/{experiment_id}?tab=big-device&flow=conductivity"
+            return ConductivityTarget(raw=raw, experiment_id=experiment_id)
+        target = parse_target(raw)
+        if target.round_id or target.experiment_id is None:
+            raise DataCoreCliError(
+                "请选择 DataCore 实验，而不是单独的轮次编号",
+                code="experiment_target_required",
+                action="先选择项目和实验，再查看该实验的电导探索记录。",
+            )
+        return replace(target, raw=page_url_for_experiment(target.raw))
+
+    def _discover_choices(self, target: ConductivityTarget) -> list[dict[str, Any]]:
+        discovered = self.transport.get(
+            f"{API}/chains", params={"experimentId": target.experiment_id}
+        )
+        choices: list[dict[str, Any]] = []
+        for row in list(discovered.get("chains") or []):
+            if row.get("chainSeq") is None:
+                continue
+            chain_seq = int(row["chainSeq"])
+            ordinal = int(row.get("currentOrdinal") or 0)
+            if chain_seq < 0 or ordinal < 1:
+                continue
+            choices.append(
+                {
+                    "title": str(row.get("title") or "未命名探索"),
+                    "roundLabel": f"第 {ordinal} 轮",
+                    "status": str(row.get("status") or ""),
+                    "pageUrl": page_url_for_round(target.raw, chain_seq=chain_seq, ordinal=ordinal),
+                    "chainSeq": chain_seq,
+                    "ordinal": ordinal,
+                }
+            )
+        return choices
+
     def resolve_round(
         self, raw_target: str
     ) -> tuple[ConductivityTarget, str, dict[str, Any] | None]:
         target = parse_target(raw_target)
         if target.round_id:
             return target, target.round_id, None
+        if target.chain_seq is None:
+            choices = self._discover_choices(target)
+            if not choices:
+                raise DataCoreCliError(
+                    "这个实验还没有可以继续的电导探索记录",
+                    code="conductivity_chain_not_found",
+                    action="先在 DataCore 电导页面创建或打开一条探索记录。",
+                    details={"experimentId": target.experiment_id, "choices": []},
+                )
+            if len(choices) > 1:
+                public_choices = [
+                    {
+                        key: value
+                        for key, value in choice.items()
+                        if key not in {"chainSeq", "ordinal"}
+                    }
+                    for choice in choices
+                ]
+                raise DataCoreCliError(
+                    "这个实验有多条电导探索记录，请先选择要操作的记录",
+                    code="target_selection_required",
+                    action="按名称和轮次向用户展示 choices；用户选择后使用对应 pageUrl 重试。",
+                    details={
+                        "experimentId": target.experiment_id,
+                        "choices": public_choices,
+                    },
+                )
+            selected = choices[0]
+            target = replace(
+                target,
+                chain_seq=int(selected["chainSeq"]),
+                ordinal=int(selected["ordinal"]),
+            )
         detail = self.transport.get(f"{API}/chains/{target.chain_seq}")
         rounds = list(detail.get("rounds") or [])
+        if target.ordinal is None and rounds:
+            target = replace(
+                target,
+                ordinal=max(int(row.get("ordinal") or 0) for row in rounds),
+            )
         match = next(
             (row for row in rounds if int(row.get("ordinal") or 0) == int(target.ordinal or 0)),
             None,
         )
         if not match or not match.get("roundRef"):
             raise DataCoreCliError(
-                f"探索链 {target.chain_seq} 中没有第 {target.ordinal} 轮",
+                "所选探索记录中没有可用的目标轮次",
                 code="round_not_found",
+                action="返回 DataCore 页面选择另一轮，或使用普通实验链接重新发现。",
             )
         return target, str(match["roundRef"]), detail
+
+    def _list(self, params: dict[str, Any]) -> dict[str, Any]:
+        target = self._experiment_target(
+            str(params.get("experiment") or params.get("target") or "")
+        )
+        discovered = self.transport.get(
+            f"{API}/chains", params={"experimentId": target.experiment_id}
+        )
+        explorations: list[dict[str, Any]] = []
+        for summary in list(discovered.get("chains") or []):
+            if summary.get("chainSeq") is None:
+                continue
+            chain_seq = int(summary["chainSeq"])
+            detail = self.transport.get(f"{API}/chains/{chain_seq}")
+            rounds = []
+            for row in sorted(
+                list(detail.get("rounds") or []),
+                key=lambda item: int(item.get("ordinal") or 0),
+            ):
+                ordinal = int(row.get("ordinal") or 0)
+                if ordinal < 1:
+                    continue
+                rounds.append(
+                    {
+                        "label": f"第 {ordinal} 轮",
+                        "status": str(row.get("status") or ""),
+                        "modelVersion": row.get("modelVersion"),
+                        "pageUrl": page_url_for_round(
+                            target.raw, chain_seq=chain_seq, ordinal=ordinal
+                        ),
+                    }
+                )
+            latest_round = rounds[-1] if rounds else None
+            available_actions: list[dict[str, Any]] = []
+            if latest_round is not None and bool(summary.get("canResume")):
+                available_actions.append(
+                    {
+                        "action": "resume",
+                        "label": "继续当前轮次",
+                        "pageUrl": latest_round["pageUrl"],
+                    }
+                )
+            if latest_round is not None and bool(summary.get("canContinue")):
+                available_actions.append(
+                    {
+                        "action": "open_next_round",
+                        "label": "新开一轮",
+                        "pageUrl": latest_round["pageUrl"],
+                    }
+                )
+            explorations.append(
+                {
+                    "title": str(summary.get("title") or "未命名探索"),
+                    "status": str(summary.get("status") or ""),
+                    "canResume": bool(summary.get("canResume")),
+                    "canOpenNextRound": bool(summary.get("canContinue")),
+                    "rounds": rounds,
+                    "availableActions": available_actions,
+                }
+            )
+        return self._result(
+            "conductivity.list",
+            f"已列出实验中的 {len(explorations)} 条电导探索记录",
+            {
+                "experimentId": target.experiment_id,
+                "experimentUrl": page_url_for_experiment(target.raw),
+                "explorations": explorations,
+            },
+        )
 
     def _wait(
         self,
@@ -119,6 +283,7 @@ class CommandEngine:
     def execute(self, command: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         params = dict(params or {})
         handlers = {
+            "conductivity.list": self._list,
             "conductivity.status": self._status,
             "conductivity.recommend": self._recommend,
             "conductivity.export": self._export,
@@ -385,10 +550,12 @@ class CommandEngine:
 
     def _next(self, params: dict[str, Any]) -> dict[str, Any]:
         self._require_confirmed(params, "开启下一轮")
-        target = parse_target(str(params.get("target") or ""))
+        target, _round_id, _chain = self.resolve_round(str(params.get("target") or ""))
         if target.chain_seq is None:
             raise DataCoreCliError(
-                "开下一轮需要包含 boChain 的 DataCore 页面链接", code="chain_target_required"
+                "开下一轮需要 DataCore 实验页面中的探索记录",
+                code="chain_target_required",
+                action="请提供实验页面链接；CLI 会自动发现可继续的探索记录。",
             )
         result = self.transport.post(f"{API}/chains/{target.chain_seq}/rounds/auto")
         return self._result("conductivity.next", "下一轮已按上一轮冻结配置创建", result)

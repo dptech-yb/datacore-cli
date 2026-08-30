@@ -585,6 +585,7 @@ Source: /reference/commands.md
 | `--request-id` | 为本次调用指定可追踪请求 ID |
 | `--timeout` | HTTP 请求超时秒数 |
 | `--version` | show program's version number and exit |
+| `--project-id` | — |
 
 ## `datacore experiment show`
 
@@ -1032,6 +1033,26 @@ Source: /reference/commands.md
 | `--version` | show program's version number and exit |
 | `--limit` | — |
 
+## `datacore conductivity list`
+
+列出实验中的探索记录和轮次
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `experiment` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+
 ## `datacore conductivity status`
 
 查看轮次状态与下一步动作
@@ -1312,7 +1333,7 @@ Agent 应优先遵循 `action`，并根据 `retryable` 判断是否能做有限�
 ## 请求追踪
 
 ```bash
-datacore --request-id my-run-20260828 --json conductivity status TARGET
+datacore --request-id my-run-20260828 --json conductivity status "<轮次页面链接>"
 ```
 
 为自动化调用设置稳定请求 ID，便于把客户端日志与 DataCore 服务端审计关联起来。
@@ -1373,7 +1394,8 @@ Source: /troubleshooting.md
 ```bash
 datacore doctor
 datacore auth status
-datacore --json conductivity status TARGET
+datacore --json conductivity list "<实验 ID 或页面链接>"
+datacore --json conductivity status "<轮次页面链接>"
 ```
 
 | 现象 | 先做什么 | 不要做什么 |
@@ -1432,11 +1454,11 @@ Source: /workflows/conductivity.md
 
 # 电导率预测迭代
 
-电导专业工作流覆盖 DataCore 大装置电导率预测迭代。推荐使用完整页面 URL 作为 `TARGET`，它同时保留实验、链路和轮次身份。
+电导专业工作流覆盖 DataCore 大装置电导率预测迭代。CLI 按“项目 → 实验 → 探索记录 → 轮次”定位工作；用户不需要识别内部链路或轮次参数。
 
 | 当前阶段 | 常用命令 | 是否写入 |
 | --- | --- | --- |
-| 定位轮次 | `status` | 否 |
+| 定位轮次 | `project list`、`experiment list`、`conductivity list`、`status` | 否 |
 | 生成推荐 | `recommend`、`export` | 是 / 否 |
 | 回传实测 | `validate`、`upload` | 否 / 是 |
 | 更新模型 | `train`、`retry-fold` | 是 |
@@ -1445,16 +1467,19 @@ Source: /workflows/conductivity.md
 ## 1. 查看当前状态
 
 ```bash
-datacore --json conductivity status TARGET
+datacore --json project list
+datacore --json experiment list --project-id 17
+datacore --json conductivity list 48
+datacore --json conductivity status "<轮次页面链接>"
 ```
 
-以服务端返回的 `nextAction` 为准，不根据页面位置或本地记录猜测下一步。
+`conductivity list` 返回实验中的探索名称、轮次标签、状态和可执行动作。选定轮次后，以服务端返回的 `nextAction` 为准，不根据页面位置或本地记录猜测下一步。
 
 ## 2. 生成并导出本轮推荐
 
 ```bash
-datacore conductivity recommend TARGET --wait --yes
-datacore conductivity export TARGET --format unilab --output task.xls
+datacore conductivity recommend "<轮次页面链接>" --wait --yes
+datacore conductivity export "<轮次页面链接>" --format unilab --output task.xls
 ```
 
 推荐计算使用当前用户在 DataCore 中保存的 Bohrium 凭据和项目号。CLI 不接受命令行 AccessKey，也不会退回平台自带凭据。
@@ -1462,8 +1487,8 @@ datacore conductivity export TARGET --format unilab --output task.xls
 ## 3. 校验并上传实测结果
 
 ```bash
-datacore conductivity validate TARGET measured.csv
-datacore conductivity upload TARGET measured.csv --yes
+datacore conductivity validate "<轮次页面链接>" measured.csv
+datacore conductivity upload "<轮次页面链接>" measured.csv --yes
 ```
 
 `validate` 只读；`upload` 会在服务端再次校验，并按推荐编号把 UniLab 回传值与本轮推荐配方关联。默认顺便合并训练数据，只有明确需要时才使用 `--no-merge`。
@@ -1471,13 +1496,13 @@ datacore conductivity upload TARGET measured.csv --yes
 ## 4. 五折训练
 
 ```bash
-datacore conductivity train TARGET --wait --yes
+datacore conductivity train "<轮次页面链接>" --wait --yes
 ```
 
 状态查询会分别显示五折。若某一折失败，只重试未完成的折：
 
 ```bash
-datacore conductivity retry-fold TARGET --fold 3 --yes
+datacore conductivity retry-fold "<轮次页面链接>" --fold 3 --yes
 ```
 
 服务端保留已经完成的折，不重复提交。
@@ -1485,9 +1510,9 @@ datacore conductivity retry-fold TARGET --fold 3 --yes
 ## 5. 比较、决策和下一轮
 
 ```bash
-datacore conductivity compare TARGET
-datacore conductivity decide TARGET continue --reason "继续优化" --yes
-datacore conductivity next TARGET --yes
+datacore conductivity compare "<轮次页面链接>"
+datacore conductivity decide "<轮次页面链接>" continue --reason "继续优化" --yes
+datacore conductivity next "<轮次页面链接>" --yes
 ```
 
 `next` 使用链路尾部冻结的配置，不接受 Agent 临时生成的实验参数。
@@ -1575,7 +1600,7 @@ Source: /skills/datacore/SKILL.md
 name: datacore
 description: "Use DataCore platform capabilities through the datacore CLI. Apply when a user asks to inspect or operate DataCore projects, experiments, conductivity optimization, reports, tools, reservations, reagents, or other DataCore resources. The CLI always acts as the signed-in DataCore user and preserves platform permissions."
 metadata:
-  version: "0.4.5"
+  version: "0.4.8"
   requires:
     bins: ["datacore"]
   cliHelp: "datacore --help"
@@ -1588,11 +1613,13 @@ Use `datacore` as the deterministic execution layer. Do not reproduce DataCore b
 1. Run read-only discovery or status commands before proposing a write.
 2. Use `--json` when another program or agent will consume the result.
 3. For a write or cloud-compute command, show the resolved target and action, obtain explicit confirmation, then pass `--yes`.
-4. Never request, print, log, or pass DataCore bearer tokens or Bohrium AccessKeys on the command line. A one-time Agent install token may only be consumed from standard input and must not be repeated in the final response. Compute commands use the current user's encrypted credential already managed by DataCore.
-5. Treat permission, validation, and lifecycle errors as authoritative platform decisions. Follow the returned `action`; do not bypass them.
+4. Never request, print, log, or pass DataCore bearer tokens or Bohrium AccessKeys on the command line. A one-time Agent install token may only be consumed from standard input and must not be repeated in the final response. Compute commands use the current user's Bohrium connection managed by DataCore; the browser, CLI, and Agent never receive the AK.
+5. Treat permission, validation, and lifecycle errors as authoritative platform decisions. Follow the returned `action`; do not bypass them. For `bohrium_binding_required`, give the user the returned personal-center URL and stop until they connect Bohrium. Never ask them to paste an AK into chat.
 6. Check `datacore --json capabilities` when uncertain whether a capability is currently exposed.
 7. Check `datacore --json quota` before large batches. Quotas belong to the DataCore user, reset at Beijing midnight, and are shared by CLI, Skills, and third-party Agents.
 8. If the task concerns conductivity optimization, read the sibling `datacore-conductivity/SKILL.md` and follow it.
+
+When the user has not already identified a project or experiment, discover them in user-facing order: run `project list`, then `experiment list --project-id ID`. Present names rather than internal identifiers and ask only when more than one reasonable choice remains.
 
 Read only the reference needed for the task:
 
@@ -1609,7 +1636,7 @@ Source: /skills/datacore-conductivity/SKILL.md
 name: datacore-conductivity
 description: "Inspect and operate DataCore's conductivity Bayesian-optimization loop through the datacore CLI. Apply for conductivity round status, recommendations, UniLab exports, measured-result validation/upload, five-fold training, fold recovery, model comparison, stop/continue decisions, or opening the next round."
 metadata:
-  version: "0.4.5"
+  version: "0.4.8"
   requires:
     bins: ["datacore"]
   cliHelp: "datacore conductivity --help"
@@ -1617,16 +1644,18 @@ metadata:
 
 # DataCore Conductivity
 
-Accept the full DataCore conductivity page URL as the preferred target. It preserves experiment, chain, and round identity; a raw `round...` identifier is acceptable only for round-scoped actions.
+Resolve the work in the same terms the user sees in DataCore:
 
-Follow the lifecycle instead of guessing:
-
-1. Run `datacore --json conductivity status TARGET`.
-2. Execute only the next valid action reported by DataCore.
-3. Validate a returned CSV before upload. Validation is read-only.
-4. Before recommend, upload, train, retry, decide, or next, summarize the exact action and obtain explicit confirmation; only then pass `--yes`.
-5. After submitting cloud work, report that it is queued/running and use status polling. Never treat a local timeout as task failure.
-6. Show all five fold states when training. Retry only unfinished work; completed folds must not be duplicated.
-7. Use the user's own remembered Bohrium credential. Never substitute a platform credential and never ask for a secret in chat.
+1. If no project is established, run `datacore --json project list`. Show project names and ask only if multiple reasonable choices remain.
+2. Run `datacore --json experiment list --project-id ID`. Show experiment names, not internal identifiers, and resolve the experiment.
+3. Run `datacore --json conductivity list ID` to list that experiment's exploration records and rounds. Present only exploration titles, round labels, status, and the available actions. If there is one viable choice, select it; otherwise ask the user.
+4. Keep the selected `pageUrl` for subsequent commands, but do not expose or ask the user for internal chain, turn, or round-reference fields.
+5. Run `conductivity status` on the selected round and execute only the next valid action reported by DataCore. “Continue” means resume that round from its server-reported state. “Open next round” means use `conductivity next` on the selected exploration after DataCore allows it. Starting a separate exploration from baseline is a different action and remains page-driven because it requires experiment configuration.
+6. Validate a returned CSV before upload. Validation is read-only.
+7. Before recommend, upload, train, retry, decide, or next, summarize the exact action and obtain explicit confirmation; only then pass `--yes`.
+8. After submitting cloud work, report that it is queued/running and use status polling. Never treat a local timeout as task failure.
+9. Show all five fold states when training. Retry only unfinished work; completed folds must not be duplicated.
+10. Use the Bohrium account connected to the current DataCore user. The platform resolves that user's AK server-side. Never substitute a platform credential and never ask for an AK or other secret in chat.
+11. If DataCore returns `bohrium_binding_required`, show the returned personal-center URL and stop. Continue the original command only after the user has completed OAuth connection and explicitly asks to resume.
 
 Read [commands](references/commands.md) for exact syntax. Read [recovery](references/recovery.md) only when a command returns an error or a long-running operation stalls.
