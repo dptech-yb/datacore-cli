@@ -7,7 +7,7 @@
 - The install token expires in about 10 minutes and is consumed once. The exchanged `dc_cli_…` credential is written directly to the operating-system keychain or, only with the explicit fallback flag, a local `0600` file; it must never be printed.
 - `datacore auth logout` revokes the current client authorization, not merely the local token.
 - The user can inspect or revoke clients in DataCore Personal Center.
-- Never put a long-lived DataCore token or Bohrium AccessKey into arguments, prompts, logs, or generated files. The short-lived installation material is the only exception and must be treated as single-use bootstrap input.
+- Never put a long-lived DataCore token or Bohrium AccessKey into arguments, prompts, logs, or generated files. DataCore resolves the OAuth-connected user's Bohrium AK server-side. If binding is required, open the returned personal-center URL instead of asking for a secret. The short-lived installation material is the only exception and must be treated as single-use bootstrap input.
 
 ## Output
 

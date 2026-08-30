@@ -25,7 +25,7 @@ irm https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.p
 需要固定版本或不执行引导时，也可以直接安装 GitHub Release 中的 wheel：
 
 ```bash
-python -m pip install https://github.com/dptech-yb/datacore-cli/releases/download/v0.4.5/datacore_cli-0.4.5-py3-none-any.whl
+python -m pip install https://github.com/dptech-yb/datacore-cli/releases/download/v0.4.6/datacore_cli-0.4.6-py3-none-any.whl
 datacore setup
 ```
 
@@ -48,6 +48,10 @@ datacore setup --install-token-stdin --allow-file-credential
 ```
 
 兑换后的正式凭据直接写入系统钥匙串；无钥匙串环境只有在上述明确选项下才保存为权限 `0600` 的本地文件。CLI 不打印正式凭据，授权可在个人中心随时撤销。
+
+云端模型任务使用当前 DataCore 用户在个人中心 OAuth 连接的 Bohrium 账号。AK 仅由 DataCore
+服务端按任务获取，不进入 CLI、Skill、Agent、命令参数或对话。未连接时，CLI 会返回可打开的
+个人中心链接；完成连接后再继续原命令。
 
 ## 快速开始
 

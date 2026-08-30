@@ -460,6 +460,44 @@ def test_transport_reuses_one_request_id_for_a_command() -> None:
     assert first == second
 
 
+def test_transport_expands_bohrium_binding_action_url(monkeypatch) -> None:
+    class Response:
+        is_success = False
+        status_code = 400
+
+        def json(self):
+            return {
+                "detail": {
+                    "code": "bohrium_binding_required",
+                    "message": "请先连接 Bohrium。",
+                    "action": "打开 DataCore 个人中心连接 Bohrium。",
+                    "actionUrl": "/account#bohrium",
+                    "retryable": False,
+                }
+            }
+
+    class Client:
+        def __init__(self, **_kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def request(self, *_args, **_kwargs):
+            return Response()
+
+    monkeypatch.setattr("datacore_cli.transport.httpx.Client", Client)
+    transport = DataCoreTransport(base_url="https://datacore.example", token="token")
+    with pytest.raises(DataCoreCliError) as caught:
+        transport.get("/api/tools/chemical-space/config")
+
+    assert caught.value.code == "bohrium_binding_required"
+    assert "https://datacore.example/account#bohrium" in caught.value.action
+
+
 def test_agent_install_token_is_read_from_stdin_and_never_printed(monkeypatch, capsys) -> None:
     install_token = "dc_install_short_lived_secret"
     formal_token = "dc_cli_long_lived_secret"

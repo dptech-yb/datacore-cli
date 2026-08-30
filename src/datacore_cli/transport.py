@@ -77,17 +77,24 @@ class DataCoreTransport:
             code = "http_error"
             message = f"DataCore 返回 HTTP {response.status_code}"
             action = ""
+            action_url = ""
             retryable = response.status_code >= 500 or response.status_code == 429
             if isinstance(detail, dict):
                 code = str(detail.get("code") or detail.get("error_code") or code)
                 message = str(detail.get("message") or detail.get("detail") or message)
                 action = str(detail.get("action") or "")
+                action_url = str(detail.get("actionUrl") or detail.get("action_url") or "")
                 retryable = bool(detail.get("retryable", retryable))
             elif detail:
                 message = str(detail)
             if response.status_code == 401:
                 action = "运行 datacore auth login 重新登录。"
                 code = "authentication_required"
+            elif action_url:
+                if action_url.startswith("/"):
+                    action_url = f"{self.base_url}{action_url}"
+                if action_url not in action:
+                    action = f"{action} {action_url}".strip()
             raise DataCoreCliError(
                 message,
                 code=code,
