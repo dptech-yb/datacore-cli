@@ -52,7 +52,7 @@ jobs:
       - name: Sign checksum manifest with Sigstore OIDC
         run: python -m sigstore sign --bundle dist/SHA256SUMS.sigstore.json dist/SHA256SUMS
       - name: Attest release artifacts
-        uses: actions/attest-build-provenance@96b4a1ef7235a096b17240c259729fdd70c83d45 # v2
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
         with:
           subject-path: "dist/*"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
