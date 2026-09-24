@@ -64,6 +64,31 @@ jobs:
           test ! -e "$test_home/bin/datacore"
           test ! -e "$test_home/.agents/datacore-skill-install.json"
 
+      # Exercise the same upload/download versions as the release workflow on PRs.
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-dist-ci
+          path: dist/
+          if-no-files-found: error
+          retention-days: 1
+
+  release-artifact-check:
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-dist-ci
+          path: dist
+      - name: Verify downloaded release distributions
+        run: |
+          (cd dist && sha256sum --check SHA256SUMS)
+          python -m pip install twine
+          python -m twine check dist/*.whl dist/*.tar.gz
+
   unix-installer:
     name: Installer / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -156,7 +181,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: python -m pip install -e .
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "22.20.0"
           cache: npm

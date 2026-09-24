@@ -11,3 +11,7 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Init and analyze share versioned configuration and must move together.
+    groups:
+      codeql:
+        patterns: ["github/codeql-action/*"]
