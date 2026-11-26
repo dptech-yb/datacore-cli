@@ -46,6 +46,25 @@ STANDARD_SCOPES = [
     "feedback:read",
     "feedback:write",
 ]
+FEEDBACK_SCOPES = {"feedback:read", "feedback:write"}
+
+
+def _unsupported_feedback_scopes(response: httpx.Response) -> bool:
+    """Retry only the exact legacy rejection, before any device request is created."""
+    if response.status_code != 400:
+        return False
+    try:
+        detail = response.json()["detail"]
+        if not isinstance(detail, dict) or detail.get("code") != "invalid_scope":
+            return False
+        prefix = "不支持的授权范围："
+        message = str(detail.get("message") or "")
+        if not message.startswith(prefix):
+            return False
+        unknown = {value.strip() for value in message[len(prefix) :].split(",")}
+        return bool(unknown) and unknown <= FEEDBACK_SCOPES
+    except (ValueError, KeyError, TypeError):
+        return False
 
 
 def _configure_console() -> None:
@@ -244,8 +263,18 @@ def _auth_login(
         "platform": f"{platform.system()} {platform.release()}",
         "scopes": STANDARD_SCOPES,
     }
+    authorization_warnings: list[str] = []
     with httpx.Client(timeout=20) as client:
         response = client.post(f"{base_url.rstrip('/')}/api/cli-auth/device/start", json=body)
+        if _unsupported_feedback_scopes(response):
+            # Keep every existing permission. Do not weaken an unrelated error,
+            # retry an uncertain write, or silently expand an old credential.
+            body["scopes"] = [scope for scope in STANDARD_SCOPES if scope not in FEEDBACK_SCOPES]
+            response = client.post(f"{base_url.rstrip('/')}/api/cli-auth/device/start", json=body)
+            authorization_warnings.append(
+                "当前平台尚不支持反馈权限，已保留其他命令的原有授权；"
+                "平台升级后运行 datacore auth login 重新申请反馈权限。"
+            )
         response.raise_for_status()
         data = response.json()
         if not as_json:
@@ -282,9 +311,12 @@ def _auth_login(
                     "summary": "DataCore CLI 登录成功",
                     "data": {"baseUrl": base_url, "storage": storage},
                     "artifacts": [],
-                    "warnings": []
-                    if storage == "keychain"
-                    else ["令牌已按你的明确选择保存到权限为 0600 的本地配置文件。"],
+                    "warnings": authorization_warnings
+                    + (
+                        []
+                        if storage == "keychain"
+                        else ["令牌已按你的明确选择保存到权限为 0600 的本地配置文件。"]
+                    ),
                 }
                 _print(result, as_json=as_json)
                 return 0
