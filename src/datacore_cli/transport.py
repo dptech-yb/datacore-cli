@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import uuid
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -69,40 +71,7 @@ class DataCoreTransport:
                 retryable=True,
             ) from exc
         if not response.is_success:
-            try:
-                body = response.json()
-            except ValueError:
-                body = {"detail": response.text[:2000]}
-            detail = body.get("detail", body) if isinstance(body, dict) else body
-            code = "http_error"
-            message = f"DataCore 返回 HTTP {response.status_code}"
-            action = ""
-            action_url = ""
-            retryable = response.status_code >= 500 or response.status_code == 429
-            if isinstance(detail, dict):
-                code = str(detail.get("code") or detail.get("error_code") or code)
-                message = str(detail.get("message") or detail.get("detail") or message)
-                action = str(detail.get("action") or "")
-                action_url = str(detail.get("actionUrl") or detail.get("action_url") or "")
-                retryable = bool(detail.get("retryable", retryable))
-            elif detail:
-                message = str(detail)
-            if response.status_code == 401:
-                action = "运行 datacore auth login 重新登录。"
-                code = "authentication_required"
-            elif action_url:
-                if action_url.startswith("/"):
-                    action_url = f"{self.base_url}{action_url}"
-                if action_url not in action:
-                    action = f"{action} {action_url}".strip()
-            raise DataCoreCliError(
-                message,
-                code=code,
-                status_code=response.status_code,
-                details=detail,
-                action=action,
-                retryable=retryable,
-            )
+            self._raise_error(response)
         if binary:
             return {
                 "content": response.content,
@@ -120,6 +89,87 @@ class DataCoreTransport:
                 code="invalid_response",
                 details=response.text[:2000],
             ) from exc
+
+    def stream(self, path: str, *, json_body: Any) -> Iterator[tuple[str, dict[str, Any]]]:
+        """Consume SSE without mistaking a truncated answer for a complete result."""
+        try:
+            with httpx.Client(timeout=self.timeout, follow_redirects=False) as client:
+                with client.stream(
+                    "POST", f"{self.base_url}{path}", json=json_body, headers=self._headers()
+                ) as response:
+                    if not response.is_success:
+                        response.read()
+                        self._raise_error(response)
+                    if not response.headers.get("content-type", "").startswith("text/event-stream"):
+                        raise DataCoreCliError("澄清接口未返回事件流", code="invalid_response")
+                    event, lines, finished = "message", [], False
+                    for line in response.iter_lines():
+                        if line.startswith(":"):
+                            continue
+                        if line.startswith("event:"):
+                            event = line[6:].strip()
+                        elif line.startswith("data:"):
+                            lines.append(line[5:].lstrip())
+                        elif not line and lines:
+                            try:
+                                value = json.loads("\n".join(lines))
+                            except ValueError as exc:
+                                raise DataCoreCliError(
+                                    "澄清事件格式无效", code="invalid_response"
+                                ) from exc
+                            if not isinstance(value, dict):
+                                raise DataCoreCliError("澄清事件格式无效", code="invalid_response")
+                            yield event, value
+                            if event == "done":
+                                finished = True
+                                break
+                            event, lines = "message", []
+                    if not finished:
+                        raise DataCoreCliError(
+                            "澄清连接中断，未提交任何反馈", code="incomplete_stream"
+                        )
+        except httpx.TimeoutException as exc:
+            raise DataCoreCliError("反馈澄清超时", code="request_timeout", retryable=True) from exc
+        except httpx.HTTPError as exc:
+            raise DataCoreCliError(
+                "反馈澄清连接失败", code="network_error", retryable=True
+            ) from exc
+
+    def _raise_error(self, response: httpx.Response) -> None:
+        try:
+            body = response.json()
+        except ValueError:
+            body = {"detail": response.text[:2000]}
+        detail = body.get("detail", body) if isinstance(body, dict) else body
+        code = "http_error"
+        message = f"DataCore 返回 HTTP {response.status_code}"
+        action = ""
+        action_url = ""
+        retryable = response.status_code >= 500 or response.status_code == 429
+        if isinstance(detail, dict):
+            code = str(detail.get("code") or detail.get("error_code") or code)
+            message = str(detail.get("message") or detail.get("detail") or message)
+            action = str(detail.get("action") or "")
+            action_url = str(detail.get("actionUrl") or detail.get("action_url") or "")
+            retryable = bool(detail.get("retryable", retryable))
+        elif detail:
+            message = str(detail)
+        if response.status_code == 401:
+            action = "运行 datacore auth login 重新登录。"
+            code = "authentication_required"
+        elif action_url:
+            if action_url.startswith("/"):
+                action_url = f"{self.base_url}{action_url}"
+            if action_url not in action:
+                action = f"{action} {action_url}".strip()
+        raise DataCoreCliError(
+            message,
+            code=code,
+            status_code=response.status_code,
+            details=detail,
+            action=action,
+            retryable=retryable,
+        )
 
     def get(self, path: str, **kwargs: Any) -> Any:
         return self.request("GET", path, **kwargs)

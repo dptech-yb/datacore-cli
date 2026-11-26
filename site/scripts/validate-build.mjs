@@ -11,9 +11,12 @@ const required = [
   'agent.json',
   'skills/datacore/SKILL.md',
   'skills/datacore-conductivity/SKILL.md',
+  'skills/datacore-feedback/SKILL.md',
+  'workflows/feedback/index.html',
   '.well-known/agent-skills/index.json',
   '.well-known/agent-skills/datacore.zip',
   '.well-known/agent-skills/datacore-conductivity.zip',
+  '.well-known/agent-skills/datacore-feedback.zip',
   '.well-known/skills/index.json',
   'CNAME',
   'robots.txt',
@@ -35,7 +38,7 @@ const discovery = JSON.parse(
 if (
   discovery.$schema !== 'https://schemas.agentskills.io/discovery/0.2.0/schema.json' ||
   !Array.isArray(discovery.skills) ||
-  discovery.skills.length !== 2
+  discovery.skills.length !== 3
 ) {
   throw new Error('Agent Skills discovery index is missing or invalid');
 }

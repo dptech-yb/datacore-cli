@@ -25,7 +25,7 @@ irm https://github.com/dptech-yb/datacore-cli/releases/latest/download/install.p
 需要固定版本或不执行引导时，也可以直接安装 GitHub Release 中的 wheel：
 
 ```bash
-python -m pip install https://github.com/dptech-yb/datacore-cli/releases/download/v0.4.8/datacore_cli-0.4.8-py3-none-any.whl
+python -m pip install https://github.com/dptech-yb/datacore-cli/releases/download/v0.5.0/datacore_cli-0.5.0-py3-none-any.whl
 datacore setup
 ```
 
@@ -141,3 +141,21 @@ irm https://github.com/dptech-yb/datacore-cli/releases/latest/download/uninstall
 - GitHub Artifact Attestation 构建来源证明。
 
 安全问题请按 [SECURITY.md](SECURITY.md) 私下报告。
+
+## 反馈与需求澄清（v0.5.0）
+
+`datacore feedback new` 在交互终端使用平台 AI 澄清需求，确认后提交；可用 `--image redacted.png`、`--page /example`、`--tool example-tool`、`--project 7` 明确附加上下文。截图应先在本机打码并导出扁平 PNG/JPEG/WebP，最大 5 MiB。默认私有，CLI 不会自动读取其他本机文件。
+
+Agent 使用随包分发的 `datacore-feedback` Skill，先问清改哪里、现状、期望、例子、使用者与频率、紧急程度与影响，再复述并取得用户确认：
+
+```sh
+datacore skills read datacore-feedback
+datacore feedback submit --json --file feedback.json --yes
+datacore feedback list --json
+datacore feedback show 0123456789abcdef0123456789abcdef --json
+datacore feedback comment 0123456789abcdef0123456789abcdef "补充一个已确认的例子。" --yes
+datacore feedback accept 0123456789abcdef0123456789abcdef --yes
+datacore feedback reopen 0123456789abcdef0123456789abcdef --message "确认的例子仍未通过。" --yes
+```
+
+缺项返回 `feedback_incomplete` 和 `error.details.questions`，不会自动保存为已澄清。平台需开放反馈中心，个人 Token 需 `feedback:read`、`feedback:write`；旧 Token 不会自动扩权。详细字段与示例见[反馈工作流](https://datacore-cli.dp.cd.mba/workflows/feedback/)。

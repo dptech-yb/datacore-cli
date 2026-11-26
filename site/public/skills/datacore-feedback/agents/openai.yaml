@@ -1,0 +1,4 @@
+interface:
+  display_name: "DataCore Feedback"
+  short_description: "Clarify, confirm, and track DataCore feedback"
+  default_prompt: "Help me clarify my DataCore change request, confirm it with me, and submit it through the CLI."

@@ -7,6 +7,7 @@
   "skillDiscovery": "https://datacore-cli.dp.cd.mba/.well-known/agent-skills/index.json",
   "skills": [
     "https://datacore-cli.dp.cd.mba/skills/datacore/SKILL.md",
-    "https://datacore-cli.dp.cd.mba/skills/datacore-conductivity/SKILL.md"
+    "https://datacore-cli.dp.cd.mba/skills/datacore-conductivity/SKILL.md",
+    "https://datacore-cli.dp.cd.mba/skills/datacore-feedback/SKILL.md"
   ]
 }

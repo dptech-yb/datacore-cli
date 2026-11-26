@@ -187,6 +187,7 @@ def write_agent_surfaces(commands: list[dict[str, Any]]) -> None:
     skill_dirs = [
         ROOT / "src" / "datacore_cli" / "skills" / "datacore",
         ROOT / "src" / "datacore_cli" / "skills" / "datacore-conductivity",
+        ROOT / "src" / "datacore_cli" / "skills" / "datacore-feedback",
     ]
     skill_files = {source: regular_skill_files(source) for source in skill_dirs}
     for source in skill_dirs:
@@ -264,6 +265,7 @@ DataCore CLI 将平台能力提供给终端、自动化程序和 AI Agent。
 - Skills 发现：https://datacore-cli.dp.cd.mba/.well-known/agent-skills/index.json
 - 基础 Skill：https://datacore-cli.dp.cd.mba/skills/datacore/SKILL.md
 - 电导 Skill：https://datacore-cli.dp.cd.mba/skills/datacore-conductivity/SKILL.md
+- 反馈 Skill：https://datacore-cli.dp.cd.mba/skills/datacore-feedback/SKILL.md
 """
     (PUBLIC / "index.md").write_text(index_text, encoding="utf-8")
 
@@ -288,6 +290,7 @@ DataCore CLI 将平台能力提供给终端、自动化程序和 AI Agent。
         "- [Agent Skills discovery](/.well-known/agent-skills/index.json)",
         "- [DataCore Skill](/skills/datacore/SKILL.md)",
         "- [Conductivity Skill](/skills/datacore-conductivity/SKILL.md)",
+        "- [Feedback Skill](/skills/datacore-feedback/SKILL.md)",
         "",
     ]
     (PUBLIC / "llms.txt").write_text("\n".join(llms), encoding="utf-8")
@@ -314,6 +317,7 @@ DataCore CLI 将平台能力提供给终端、自动化程序和 AI Agent。
                 "skills": [
                     "https://datacore-cli.dp.cd.mba/skills/datacore/SKILL.md",
                     "https://datacore-cli.dp.cd.mba/skills/datacore-conductivity/SKILL.md",
+                    "https://datacore-cli.dp.cd.mba/skills/datacore-feedback/SKILL.md",
                 ],
             },
             ensure_ascii=False,

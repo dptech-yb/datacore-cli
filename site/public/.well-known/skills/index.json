@@ -20,6 +20,15 @@
         "references/commands.md",
         "references/recovery.md"
       ]
+    },
+    {
+      "name": "datacore-feedback",
+      "description": "Clarify and submit DataCore feedback when a user wants a page or tool changed, requests a new feature, or needs to review or accept an existing request. Ask plain-language questions, confirm the user's intent, then use the DataCore CLI.",
+      "files": [
+        "SKILL.md",
+        "agents/openai.yaml",
+        "references/commands.md"
+      ]
     }
   ]
 }

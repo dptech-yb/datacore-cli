@@ -755,6 +755,186 @@
 | `--version` | show program's version number and exit |
 | `--limit` | — |
 
+## `datacore feedback new`
+
+在终端与平台 AI 澄清并确认提交
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `message` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--public` | 公开摘要和截图，默认私有 |
+| `--allow-incomplete` | 明确允许保存为待澄清 |
+| `--image` | 已打码的 PNG、JPEG、WebP 截图，最大 5 MiB |
+| `--page` | 目标页面路由或链接 |
+| `--tool` | 目标工具标识 |
+| `--project` | 目标项目编号 |
+| `--json` | — |
+
+## `datacore feedback submit`
+
+提交结构化反馈，缺项返回待问问题
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--file` | JSON 文件；- 表示标准输入 |
+| `--yes` | 确认发送所选文字和截图 |
+| `--image` | 已打码的 PNG、JPEG、WebP 截图，最大 5 MiB |
+| `--page` | 目标页面路由或链接 |
+| `--tool` | 目标工具标识 |
+| `--project` | 目标项目编号 |
+| `--json` | — |
+
+## `datacore feedback list`
+
+查看反馈及处理进度
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--view` | — |
+| `--status` | — |
+| `--q` | — |
+| `--offset` | — |
+| `--limit` | — |
+| `--json` | — |
+
+## `datacore feedback show`
+
+查看反馈详情
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `id` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--json` | — |
+
+## `datacore feedback comment`
+
+补充反馈说明
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `id` | 是 | — |
+| `message` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--yes` | — |
+| `--json` | — |
+
+## `datacore feedback accept`
+
+确认解决
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `id` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--message` | — |
+| `--yes` | — |
+| `--json` | — |
+
+## `datacore feedback reopen`
+
+验收未通过
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `id` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--message` | — |
+| `--yes` | — |
+| `--json` | — |
+
+## `datacore feedback export`
+
+导出作为用户数据的 Markdown 任务书
+
+### 参数
+
+| 名称 | 必填 | 可选值 |
+| --- | --- | --- |
+| `id` | 是 | — |
+
+### 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--base-url` | — |
+| `--json` | — |
+| `--request-id` | 为本次调用指定可追踪请求 ID |
+| `--timeout` | HTTP 请求超时秒数 |
+| `--version` | show program's version number and exit |
+| `--output` | — |
+| `--json` | — |
+
 ## `datacore conductivity list`
 
 列出实验中的探索记录和轮次
