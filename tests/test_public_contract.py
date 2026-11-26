@@ -58,13 +58,21 @@ def test_skills_install_is_idempotent(monkeypatch, tmp_path: Path, capsys) -> No
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     assert main(["--json", "skills", "install"]) == 0
     first = json.loads(capsys.readouterr().out)
-    assert sorted(first["data"]["installed"]) == ["datacore", "datacore-conductivity"]
+    assert sorted(first["data"]["installed"]) == [
+        "datacore",
+        "datacore-conductivity",
+        "datacore-feedback",
+    ]
     assert first["data"]["canonicalPath"] == str(tmp_path / ".agents" / "skills")
     assert (tmp_path / ".agents" / "skills" / "datacore" / "SKILL.md").is_file()
 
     assert main(["--json", "skills", "install"]) == 0
     second = json.loads(capsys.readouterr().out)
-    assert sorted(second["data"]["skipped"]) == ["datacore", "datacore-conductivity"]
+    assert sorted(second["data"]["skipped"]) == [
+        "datacore",
+        "datacore-conductivity",
+        "datacore-feedback",
+    ]
 
 
 def test_skills_install_migrates_codex_and_adapts_detected_claude(

@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .errors import DataCoreCliError
+from .feedback import FeedbackEngine
 from .transport import DataCoreTransport
 
 
@@ -53,6 +54,8 @@ class PlatformEngine:
 
     def execute(self, command: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         values = dict(params or {})
+        if command.startswith("feedback."):
+            return FeedbackEngine(self.transport).execute(command, values)
         handlers: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
             "quota.status": self._quota,
             "capabilities.list": self._capabilities,

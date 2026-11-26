@@ -20,6 +20,7 @@ import httpx
 from .credentials import delete_token, load_token, save_token
 from .engine import CommandEngine
 from .errors import DataCoreCliError, exit_code_for_error
+from .feedback import FeedbackEngine, interactive_new
 from .platform import PlatformEngine
 from .skill_install import install_skills, skills_status, uninstall_skills
 from .transport import DataCoreTransport
@@ -42,7 +43,28 @@ STANDARD_SCOPES = [
     "conductivity:export",
     "conductivity:write",
     "conductivity:compute",
+    "feedback:read",
+    "feedback:write",
 ]
+FEEDBACK_SCOPES = {"feedback:read", "feedback:write"}
+
+
+def _unsupported_feedback_scopes(response: httpx.Response) -> bool:
+    """Retry only the exact legacy rejection, before any device request is created."""
+    if response.status_code != 400:
+        return False
+    try:
+        detail = response.json()["detail"]
+        if not isinstance(detail, dict) or detail.get("code") != "invalid_scope":
+            return False
+        prefix = "不支持的授权范围："
+        message = str(detail.get("message") or "")
+        if not message.startswith(prefix):
+            return False
+        unknown = {value.strip() for value in message[len(prefix) :].split(",")}
+        return bool(unknown) and unknown <= FEEDBACK_SCOPES
+    except (ValueError, KeyError, TypeError):
+        return False
 
 
 def _configure_console() -> None:
@@ -241,8 +263,18 @@ def _auth_login(
         "platform": f"{platform.system()} {platform.release()}",
         "scopes": STANDARD_SCOPES,
     }
+    authorization_warnings: list[str] = []
     with httpx.Client(timeout=20) as client:
         response = client.post(f"{base_url.rstrip('/')}/api/cli-auth/device/start", json=body)
+        if _unsupported_feedback_scopes(response):
+            # Keep every existing permission. Do not weaken an unrelated error,
+            # retry an uncertain write, or silently expand an old credential.
+            body["scopes"] = [scope for scope in STANDARD_SCOPES if scope not in FEEDBACK_SCOPES]
+            response = client.post(f"{base_url.rstrip('/')}/api/cli-auth/device/start", json=body)
+            authorization_warnings.append(
+                "当前平台尚不支持反馈权限，已保留其他命令的原有授权；"
+                "平台升级后运行 datacore auth login 重新申请反馈权限。"
+            )
         response.raise_for_status()
         data = response.json()
         if not as_json:
@@ -279,9 +311,12 @@ def _auth_login(
                     "summary": "DataCore CLI 登录成功",
                     "data": {"baseUrl": base_url, "storage": storage},
                     "artifacts": [],
-                    "warnings": []
-                    if storage == "keychain"
-                    else ["令牌已按你的明确选择保存到权限为 0600 的本地配置文件。"],
+                    "warnings": authorization_warnings
+                    + (
+                        []
+                        if storage == "keychain"
+                        else ["令牌已按你的明确选择保存到权限为 0600 的本地配置文件。"]
+                    ),
                 }
                 _print(result, as_json=as_json)
                 return 0
@@ -521,6 +556,46 @@ def _parser() -> argparse.ArgumentParser:
     tsub = tool.add_subparsers(dest="tool_command", required=True)
     history = tsub.add_parser("history", help="查看本人的工具运行历史")
     history.add_argument("--limit", type=int, default=50)
+
+    feedback = sub.add_parser("feedback", help="页面反馈与需求澄清")
+    fsub = feedback.add_subparsers(dest="feedback_command", required=True)
+    new = fsub.add_parser("new", help="在终端与平台 AI 澄清并确认提交")
+    new.add_argument("message", nargs="?", default="")
+    new.add_argument("--public", action="store_true", help="公开摘要和截图，默认私有")
+    new.add_argument("--allow-incomplete", action="store_true", help="明确允许保存为待澄清")
+    submit = fsub.add_parser("submit", help="提交结构化反馈，缺项返回待问问题")
+    submit.add_argument("--file", required=True, help="JSON 文件；- 表示标准输入")
+    submit.add_argument("--yes", action="store_true", help="确认发送所选文字和截图")
+    for item in (new, submit):
+        item.add_argument("--image", help="已打码的 PNG、JPEG、WebP 截图，最大 5 MiB")
+        item.add_argument("--page", help="目标页面路由或链接")
+        item.add_argument("--tool", help="目标工具标识")
+        item.add_argument("--project", type=int, help="目标项目编号")
+    listing = fsub.add_parser("list", help="查看反馈及处理进度")
+    listing.add_argument("--view", choices=["mine", "public", "all"], default="mine")
+    listing.add_argument("--status")
+    listing.add_argument("--q", default="")
+    listing.add_argument("--offset", type=int, default=0)
+    listing.add_argument("--limit", type=int, default=30)
+
+    def add_feedback_id(name: str, label: str) -> argparse.ArgumentParser:
+        item = fsub.add_parser(name, help=label)
+        item.add_argument("id", help="平台返回的完整反馈编号（32 位字符串）")
+        return item
+
+    add_feedback_id("show", "查看反馈详情")
+    comment = add_feedback_id("comment", "补充反馈说明")
+    comment.add_argument("message")
+    comment.add_argument("--yes", action="store_true")
+    for name, label in (("accept", "确认解决"), ("reopen", "验收未通过")):
+        item = add_feedback_id(name, label)
+        item.add_argument("--message", default="")
+        item.add_argument("--yes", action="store_true")
+    export_feedback = add_feedback_id("export", "导出作为用户数据的 Markdown 任务书")
+    export_feedback.add_argument("--output", required=True)
+    # Accept the documented Agent spelling as well as the existing global flag.
+    for item in fsub.choices.values():
+        item.add_argument("--json", action="store_true", dest="as_json", default=argparse.SUPPRESS)
 
     conductivity = sub.add_parser("conductivity", help="电导完整工作流")
     csub = conductivity.add_subparsers(dest="conductivity_command", required=True)
@@ -830,7 +905,9 @@ def main(argv: list[str] | None = None) -> int:
             params["totalMassG"] = params.pop("total_mass_g")
         if "no_merge" in params:
             params["merge"] = not params.pop("no_merge")
-        if args.group == "conductivity":
+        if args.group == "feedback" and args.feedback_command == "new":
+            result = interactive_new(FeedbackEngine(transport), params)
+        elif args.group == "conductivity":
             command = f"conductivity.{args.conductivity_command}"
             result = CommandEngine(transport).execute(command, params)
         elif args.group in {"quota", "capabilities"}:
@@ -841,6 +918,17 @@ def main(argv: list[str] | None = None) -> int:
             result = PlatformEngine(transport).execute(command, params)
         _print(result, as_json=args.as_json)
         return 0
+    except (EOFError, KeyboardInterrupt):
+        _print(
+            {
+                "ok": False,
+                "command": "feedback.new",
+                "summary": "已取消",
+                "data": {"cancelled": True},
+            },
+            as_json=args.as_json,
+        )
+        return 130
     except DataCoreCliError as exc:
         envelope = {
             "ok": False,

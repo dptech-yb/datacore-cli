@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1",
   "cli": "datacore",
-  "version": "0.4.8",
+  "version": "0.5.0",
   "generatedFrom": "src/datacore_cli/main.py",
   "commands": [
     {
@@ -3152,6 +3152,840 @@
           "help": "",
           "choices": [],
           "default": 50
+        }
+      ],
+      "requiresConfirmation": false,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore feedback new",
+      "summary": "在终端与平台 AI 澄清并确认提交",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "message",
+          "flags": [],
+          "required": true,
+          "help": "",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "public",
+          "flags": [
+            "--public"
+          ],
+          "required": false,
+          "help": "公开摘要和截图，默认私有",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "allow_incomplete",
+          "flags": [
+            "--allow-incomplete"
+          ],
+          "required": false,
+          "help": "明确允许保存为待澄清",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "image",
+          "flags": [
+            "--image"
+          ],
+          "required": false,
+          "help": "已打码的 PNG、JPEG、WebP 截图，最大 5 MiB",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "page",
+          "flags": [
+            "--page"
+          ],
+          "required": false,
+          "help": "目标页面路由或链接",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "tool",
+          "flags": [
+            "--tool"
+          ],
+          "required": false,
+          "help": "目标工具标识",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "project",
+          "flags": [
+            "--project"
+          ],
+          "required": false,
+          "help": "目标项目编号",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": null
+        }
+      ],
+      "requiresConfirmation": false,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore feedback submit",
+      "summary": "提交结构化反馈，缺项返回待问问题",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "file",
+          "flags": [
+            "--file"
+          ],
+          "required": true,
+          "help": "JSON 文件；- 表示标准输入",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "yes",
+          "flags": [
+            "--yes"
+          ],
+          "required": false,
+          "help": "确认发送所选文字和截图",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "image",
+          "flags": [
+            "--image"
+          ],
+          "required": false,
+          "help": "已打码的 PNG、JPEG、WebP 截图，最大 5 MiB",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "page",
+          "flags": [
+            "--page"
+          ],
+          "required": false,
+          "help": "目标页面路由或链接",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "tool",
+          "flags": [
+            "--tool"
+          ],
+          "required": false,
+          "help": "目标工具标识",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "project",
+          "flags": [
+            "--project"
+          ],
+          "required": false,
+          "help": "目标项目编号",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": null
+        }
+      ],
+      "requiresConfirmation": true,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore feedback list",
+      "summary": "查看反馈及处理进度",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "view",
+          "flags": [
+            "--view"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [
+            "mine",
+            "public",
+            "all"
+          ],
+          "default": "mine"
+        },
+        {
+          "name": "status",
+          "flags": [
+            "--status"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "q",
+          "flags": [
+            "--q"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "offset",
+          "flags": [
+            "--offset"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": 0
+        },
+        {
+          "name": "limit",
+          "flags": [
+            "--limit"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": 30
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": null
+        }
+      ],
+      "requiresConfirmation": false,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore feedback show",
+      "summary": "查看反馈详情",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "id",
+          "flags": [],
+          "required": true,
+          "help": "平台返回的完整反馈编号（32 位字符串）",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": null
+        }
+      ],
+      "requiresConfirmation": false,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore feedback comment",
+      "summary": "补充反馈说明",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "id",
+          "flags": [],
+          "required": true,
+          "help": "平台返回的完整反馈编号（32 位字符串）",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "message",
+          "flags": [],
+          "required": true,
+          "help": "",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "yes",
+          "flags": [
+            "--yes"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": null
+        }
+      ],
+      "requiresConfirmation": true,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore feedback accept",
+      "summary": "确认解决",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "id",
+          "flags": [],
+          "required": true,
+          "help": "平台返回的完整反馈编号（32 位字符串）",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "message",
+          "flags": [
+            "--message"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "yes",
+          "flags": [
+            "--yes"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": null
+        }
+      ],
+      "requiresConfirmation": true,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore feedback reopen",
+      "summary": "验收未通过",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "id",
+          "flags": [],
+          "required": true,
+          "help": "平台返回的完整反馈编号（32 位字符串）",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "message",
+          "flags": [
+            "--message"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "yes",
+          "flags": [
+            "--yes"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": null
+        }
+      ],
+      "requiresConfirmation": true,
+      "supportsJson": true
+    },
+    {
+      "command": "datacore feedback export",
+      "summary": "导出作为用户数据的 Markdown 任务书",
+      "arguments": [
+        {
+          "name": "base_url",
+          "flags": [
+            "--base-url"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": "https://datacore.dp.qifalab.cn"
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": false
+        },
+        {
+          "name": "request_id",
+          "flags": [
+            "--request-id"
+          ],
+          "required": false,
+          "help": "为本次调用指定可追踪请求 ID",
+          "choices": [],
+          "default": ""
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "help": "HTTP 请求超时秒数",
+          "choices": [],
+          "default": 120.0
+        },
+        {
+          "name": "version",
+          "flags": [
+            "--version"
+          ],
+          "required": false,
+          "help": "show program's version number and exit",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "id",
+          "flags": [],
+          "required": true,
+          "help": "平台返回的完整反馈编号（32 位字符串）",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "output",
+          "flags": [
+            "--output"
+          ],
+          "required": true,
+          "help": "",
+          "choices": [],
+          "default": null
+        },
+        {
+          "name": "as_json",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "help": "",
+          "choices": [],
+          "default": null
         }
       ],
       "requiresConfirmation": false,
