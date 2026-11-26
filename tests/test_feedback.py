@@ -247,7 +247,7 @@ def test_export_preserves_untrusted_data_header(api, tmp_path):
     result = FeedbackEngine(transport).execute(
         "feedback.export", {"id": FEEDBACK_ID, "output": str(target)}
     )
-    assert target.read_text() == text
+    assert target.read_text(encoding="utf-8") == text
     assert calls[0].url.path == f"/api/feedback/{FEEDBACK_ID}/export"
     assert result["artifacts"][0]["path"] == str(target)
 
